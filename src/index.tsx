@@ -1,5 +1,6 @@
 import { GitHubProjectsPanel, GitHubProjectsPanelMetadata } from './panels/GitHubProjectsPanel';
 import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSearchPanel';
+import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
 import { githubTools, githubToolsMetadata } from './tools';
 
@@ -45,6 +46,20 @@ export const panels: PanelDefinition[] = [
       console.log('GitHub Search Panel unmounting');
     },
   },
+  {
+    metadata: OwnerRepositoriesPanelMetadata,
+    component: OwnerRepositoriesPanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Owner Repositories Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Owner Repositories Panel unmounting');
+    },
+  },
 ];
 
 /**
@@ -69,6 +84,7 @@ export const onPackageUnload = async () => {
 export { GitHubProjectCard } from './components/GitHubProjectCard';
 export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
+export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
 
 // Export types
 export type {
