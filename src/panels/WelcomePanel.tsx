@@ -399,7 +399,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
               color: theme.colors.textSecondary,
             }}
           >
-            Try it with{' '}
+            Check out our forks of popular repos:{' '}
             {highlightedProjects.map((project, index) => (
               <React.Fragment key={`${project.owner}/${project.repo}`}>
                 {index > 0 && (index === highlightedProjects.length - 1 ? ' or ' : ', ')}
