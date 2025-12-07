@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Github,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -57,7 +58,9 @@ const FeatureCard: React.FC<{
   title: string;
   description: string;
   theme: ReturnType<typeof useTheme>['theme'];
-}> = ({ icon, title, description, theme }) => {
+  link?: string;
+  linkLabel?: string;
+}> = ({ icon, title, description, theme, link, linkLabel }) => {
   // Split title to stack words vertically - first word in text color, rest in primary
   const words = title.split(' ');
   const firstWord = words[0];
@@ -119,6 +122,25 @@ const FeatureCard: React.FC<{
       >
         {description}
       </p>
+      {link && (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '4px',
+            fontSize: `${theme.fontSizes[1]}px`,
+            color: theme.colors.primary,
+            textDecoration: 'none',
+          }}
+        >
+          {linkLabel || 'Learn more'}
+          <ExternalLink size={14} />
+        </a>
+      )}
     </div>
   );
 };
@@ -341,12 +363,16 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
             title="Reliable Documentation"
             description="Always up-to-date documentation generated directly from your codebase, never out of sync."
             theme={theme}
+            link="https://github.com/principal-ai/alexandria-cli"
+            linkLabel="alexandria-cli"
           />
           <FeatureCard
             icon={<Network size={24} />}
             title="Interactive Diagrams"
             description="Visualize repository structure, dependencies, and architecture with auto-generated diagrams you can explore."
             theme={theme}
+            link="https://www.npmjs.com/package/@principal-ai/visual-validation-cli"
+            linkLabel="visual-validation-cli"
           />
           <FeatureCard
             icon={<Sparkles size={24} />}
