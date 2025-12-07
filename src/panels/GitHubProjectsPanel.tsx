@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import {
   Github,
   Search,
@@ -533,11 +533,7 @@ const GitHubProjectsPanelContent: React.FC<PanelComponentProps> = ({
  * Required data slice: 'github-repositories' (GitHubRepositoriesSliceData)
  */
 export const GitHubProjectsPanel: React.FC<PanelComponentProps> = (props) => {
-  return (
-    <ThemeProvider>
-      <GitHubProjectsPanelContent {...props} />
-    </ThemeProvider>
-  );
+  return <GitHubProjectsPanelContent {...props} />;
 };
 
 /**

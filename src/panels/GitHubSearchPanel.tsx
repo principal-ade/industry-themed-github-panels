@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import { Search, Github, Star, GitFork, ExternalLink } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -396,11 +396,7 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
  * - Emits repository:selected events when a repo is clicked
  */
 export const GitHubSearchPanel: React.FC<PanelComponentProps> = (props) => {
-  return (
-    <ThemeProvider>
-      <GitHubSearchPanelContent {...props} />
-    </ThemeProvider>
-  );
+  return <GitHubSearchPanelContent {...props} />;
 };
 
 /**

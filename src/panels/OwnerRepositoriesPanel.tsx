@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import {
   Github,
   Star,
@@ -667,11 +667,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
  * - Click to preview README, double-click to open
  */
 export const OwnerRepositoriesPanel: React.FC<PanelComponentProps & { owner?: string }> = (props) => {
-  return (
-    <ThemeProvider>
-      <OwnerRepositoriesPanelContent {...props} />
-    </ThemeProvider>
-  );
+  return <OwnerRepositoriesPanelContent {...props} />;
 };
 
 /**

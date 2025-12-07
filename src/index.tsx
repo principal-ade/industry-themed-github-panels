@@ -1,6 +1,8 @@
 import { GitHubProjectsPanel, GitHubProjectsPanelMetadata } from './panels/GitHubProjectsPanel';
 import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSearchPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
+import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
+import { WelcomePanel, WelcomePanelMetadata } from './panels/WelcomePanel';
 import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
 import { githubTools, githubToolsMetadata } from './tools';
 
@@ -60,6 +62,34 @@ export const panels: PanelDefinition[] = [
       console.log('Owner Repositories Panel unmounting');
     },
   },
+  {
+    metadata: RecentRepositoriesPanelMetadata,
+    component: RecentRepositoriesPanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Recent Repositories Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Recent Repositories Panel unmounting');
+    },
+  },
+  {
+    metadata: WelcomePanelMetadata,
+    component: WelcomePanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Welcome Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Welcome Panel unmounting');
+    },
+  },
 ];
 
 /**
@@ -85,6 +115,10 @@ export { GitHubProjectCard } from './components/GitHubProjectCard';
 export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
 export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
+export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
+export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
+export { WelcomePanel } from './panels/WelcomePanel';
+export type { WelcomePanelProps, HighlightedProject } from './panels/WelcomePanel';
 
 // Export types
 export type {
