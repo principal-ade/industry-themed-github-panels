@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Logo } from '@principal-ai/logo-component';
 import {
   BookOpen,
   Network,
@@ -22,11 +21,21 @@ export interface HighlightedProject {
 }
 
 /**
+ * Featured organization for the organizations section
+ */
+export interface FeaturedOrganization {
+  login: string;
+  description?: string;
+}
+
+/**
  * Props for the WelcomePanel
  */
 export interface WelcomePanelProps extends PanelComponentProps {
   onNavigate?: (owner: string, repo: string) => void;
   highlightedProjects?: HighlightedProject[];
+  featuredOrganizations?: FeaturedOrganization[];
+  onOrganizationClick?: (org: string) => void;
 }
 
 /**
@@ -151,6 +160,82 @@ const defaultHighlightedProjects: HighlightedProject[] = [
   { owner: 'vercel', repo: 'next.js' },
 ];
 
+// Default featured organizations
+const defaultFeaturedOrganizations: FeaturedOrganization[] = [];
+
+/**
+ * Organization card component
+ */
+const OrganizationCard: React.FC<{
+  org: FeaturedOrganization;
+  theme: ReturnType<typeof useTheme>['theme'];
+  onClick: () => void;
+}> = ({ org, theme, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '16px 20px',
+        borderRadius: '12px',
+        backgroundColor: theme.colors.surface,
+        border: `1px solid ${theme.colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        minWidth: '240px',
+        textAlign: 'left',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = theme.colors.primary;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = theme.colors.border;
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      {/* Organization Avatar */}
+      <img
+        src={`https://github.com/${org.login}.png?size=64`}
+        alt={org.login}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: '8px',
+          flexShrink: 0,
+        }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: `${theme.fontSizes[2]}px`,
+            fontWeight: theme.fontWeights.semibold,
+            color: theme.colors.text,
+            marginBottom: org.description ? '2px' : 0,
+          }}
+        >
+          {org.login}
+        </div>
+        {org.description && (
+          <div
+            style={{
+              fontSize: `${theme.fontSizes[1]}px`,
+              color: theme.colors.textSecondary,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {org.description}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+};
+
 /**
  * WelcomePanel - A landing panel with branding and repo search
  *
@@ -163,6 +248,8 @@ const defaultHighlightedProjects: HighlightedProject[] = [
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({
   onNavigate,
   highlightedProjects = defaultHighlightedProjects,
+  featuredOrganizations = defaultFeaturedOrganizations,
+  onOrganizationClick,
 }) => {
   const { theme } = useTheme();
   const [repoInput, setRepoInput] = useState('');
@@ -194,6 +281,15 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
     }
   }, [onNavigate]);
 
+  const handleOrganizationClick = useCallback((org: FeaturedOrganization) => {
+    if (onOrganizationClick) {
+      onOrganizationClick(org.login);
+    } else {
+      // Default: open GitHub org page
+      window.open(`https://github.com/${org.login}`, '_blank');
+    }
+  }, [onOrganizationClick]);
+
   return (
     <div
       style={{
@@ -217,37 +313,6 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
           borderBottom: `1px solid ${theme.colors.border}`,
         }}
       >
-        {/* Logo/Brand */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <Logo
-            width={56}
-            height={56}
-            color={theme.colors.primary}
-          />
-          <span
-            style={{
-              fontSize: `${theme.fontSizes[6] || 32}px`,
-              fontWeight: theme.fontWeights.bold,
-            }}
-          >
-            <span style={{ color: theme.colors.text }}>Principal</span>
-            {' '}
-            <span style={{ color: theme.colors.primary }}>AI</span>
-          </span>
-          <Logo
-            width={56}
-            height={56}
-            color={theme.colors.primary}
-          />
-        </div>
-
         {/* Tagline */}
         <h1
           style={{
@@ -382,6 +447,47 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
           />
         </div>
       </div>
+
+      {/* Featured Organizations Section */}
+      {featuredOrganizations.length > 0 && (
+        <div
+          style={{
+            padding: '0 32px 48px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: `${theme.fontSizes[3]}px`,
+              fontWeight: theme.fontWeights.semibold,
+              color: theme.colors.textSecondary,
+            }}
+          >
+            Explore Our Projects
+          </h2>
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {featuredOrganizations.map((org) => (
+              <OrganizationCard
+                key={org.login}
+                org={org}
+                theme={theme}
+                onClick={() => handleOrganizationClick(org)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Start Hint */}
       {highlightedProjects.length > 0 && (

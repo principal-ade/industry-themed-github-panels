@@ -118,7 +118,7 @@ export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
 export { WelcomePanel } from './panels/WelcomePanel';
-export type { WelcomePanelProps, HighlightedProject } from './panels/WelcomePanel';
+export type { WelcomePanelProps, HighlightedProject, FeaturedOrganization } from './panels/WelcomePanel';
 
 // Export types
 export type {
