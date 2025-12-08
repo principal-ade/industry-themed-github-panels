@@ -36,6 +36,7 @@ export const mockOwnedRepositories: GitHubRepository[] = [
     updated_at: '2024-11-25T10:30:00Z',
     pushed_at: '2024-11-25T10:30:00Z',
     topics: ['react', 'typescript', 'vite'],
+    license: 'MIT',
   },
   {
     id: 2,
@@ -56,6 +57,7 @@ export const mockOwnedRepositories: GitHubRepository[] = [
     stargazers_count: 0,
     forks_count: 0,
     updated_at: '2024-11-20T08:00:00Z',
+    license: null,
   },
   {
     id: 3,
@@ -76,6 +78,7 @@ export const mockOwnedRepositories: GitHubRepository[] = [
     stargazers_count: 15,
     forks_count: 2,
     updated_at: '2024-11-15T14:00:00Z',
+    license: 'Apache-2.0',
   },
   {
     id: 4,
@@ -96,6 +99,7 @@ export const mockOwnedRepositories: GitHubRepository[] = [
     stargazers_count: 8,
     forks_count: 1,
     updated_at: '2024-10-30T16:00:00Z',
+    license: 'Unlicense',
   },
 ];
 
@@ -124,6 +128,7 @@ export const mockStarredRepositories: GitHubRepository[] = [
     watchers_count: 225000,
     updated_at: '2024-11-27T12:00:00Z',
     topics: ['javascript', 'react', 'frontend'],
+    license: 'MIT',
   },
   {
     id: 102,
@@ -145,6 +150,7 @@ export const mockStarredRepositories: GitHubRepository[] = [
     forks_count: 5800,
     updated_at: '2024-11-26T18:00:00Z',
     topics: ['vite', 'build-tool', 'frontend'],
+    license: 'MIT',
   },
   {
     id: 103,
@@ -166,6 +172,7 @@ export const mockStarredRepositories: GitHubRepository[] = [
     forks_count: 2300,
     updated_at: '2024-11-27T08:00:00Z',
     topics: ['rust', 'desktop', 'webview'],
+    license: 'Apache-2.0',
   },
   {
     id: 104,
@@ -186,6 +193,7 @@ export const mockStarredRepositories: GitHubRepository[] = [
     stargazers_count: 98000,
     forks_count: 12000,
     updated_at: '2024-11-27T10:00:00Z',
+    license: 'Apache-2.0',
   },
 ];
 

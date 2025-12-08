@@ -42,6 +42,8 @@ export interface GitHubRepository {
   archived?: boolean;
   disabled?: boolean;
   visibility?: 'public' | 'private' | 'internal';
+  /** License SPDX identifier (e.g., "MIT", "Apache-2.0") */
+  license?: string | null;
 }
 
 /**

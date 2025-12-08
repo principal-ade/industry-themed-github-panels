@@ -5,6 +5,7 @@ import {
   Star,
   GitFork,
   Lock,
+  Scale,
 } from 'lucide-react';
 
 import type { GitHubRepository } from '../types/github';
@@ -224,6 +225,14 @@ export const GitHubProjectCard: React.FC<GitHubProjectCardProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <GitFork size={12} />
               <span>{formatCount(forkCount)}</span>
+            </div>
+          )}
+
+          {/* License */}
+          {repository.license && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Scale size={12} />
+              <span>{repository.license}</span>
             </div>
           )}
         </div>
