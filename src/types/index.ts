@@ -47,6 +47,8 @@ export type {
   GitHubRepository,
   GitHubOrganization,
   GitHubRepositoriesSliceData,
+  OwnerInfo,
+  OwnerRepositoriesSliceData,
   RepositorySelectedEventPayload,
   RepositoryPreviewEventPayload,
   GitHubPanelEventType,

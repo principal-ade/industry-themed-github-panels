@@ -11,24 +11,14 @@ import {
   Building2,
   User,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
-import type { GitHubRepository, RepositoryPreviewEventPayload } from '../types/github';
+import type { GitHubRepository, RepositoryPreviewEventPayload, OwnerRepositoriesSliceData } from '../types/github';
 
 type SortField = 'updated' | 'stars' | 'name' | 'created';
 type SortOrder = 'asc' | 'desc';
-
-interface OwnerInfo {
-  login: string;
-  avatar_url: string;
-  name?: string;
-  bio?: string;
-  type: 'User' | 'Organization';
-  public_repos: number;
-  followers?: number;
-  following?: number;
-}
 
 /**
  * OwnerRepositoriesPanelContent - Internal component that uses theme
@@ -39,84 +29,53 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
   owner: propOwner,
 }) => {
   const { theme } = useTheme();
-  const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField>('updated');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [languageFilter, setLanguageFilter] = useState<string | null>(null);
-  const [languages, setLanguages] = useState<string[]>([]);
 
   // Get owner from prop or context
   const owner = propOwner || (context?.currentScope?.repository as { name?: string })?.name;
 
-  // Fetch owner info and repositories
-  const fetchOwnerData = useCallback(async () => {
-    if (!owner) {
-      setError('No owner specified');
-      setIsLoading(false);
-      return;
-    }
+  // Get owner repositories slice
+  const ownerSlice = context.getSlice<OwnerRepositoriesSliceData>('owner-repositories');
+  const isLoading = context.isSliceLoading('owner-repositories');
 
-    setIsLoading(true);
-    setError(null);
+  const ownerInfo = ownerSlice?.data?.owner ?? null;
+  const repositories = ownerSlice?.data?.repositories ?? [];
+  const error = ownerSlice?.data?.error ?? null;
+  const isAuthenticated = ownerSlice?.data?.isAuthenticated ?? false;
 
-    try {
-      // Fetch owner info (user or org)
-      const userResponse = await fetch(`https://api.github.com/users/${owner}`);
+  // Extract unique languages from repositories
+  const languages = React.useMemo(() => {
+    return [...new Set(
+      repositories
+        .map(r => r.language)
+        .filter((lang): lang is string => lang !== null)
+    )].sort();
+  }, [repositories]);
 
-      if (!userResponse.ok) {
-        if (userResponse.status === 404) {
-          throw new Error(`User or organization "${owner}" not found`);
-        }
-        throw new Error('Failed to fetch owner info');
-      }
+  // Request data refresh
+  const handleRefresh = useCallback(() => {
+    events.emit({
+      type: 'owner-repositories:refresh',
+      source: 'owner-repositories-panel',
+      timestamp: Date.now(),
+      payload: { owner },
+    });
+  }, [events, owner]);
 
-      const userData = await userResponse.json();
-      setOwnerInfo({
-        login: userData.login,
-        avatar_url: userData.avatar_url,
-        name: userData.name,
-        bio: userData.bio,
-        type: userData.type,
-        public_repos: userData.public_repos,
-        followers: userData.followers,
-        following: userData.following,
-      });
-
-      // Fetch repositories (handles pagination up to 100)
-      const reposResponse = await fetch(
-        `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated`
-      );
-
-      if (!reposResponse.ok) {
-        throw new Error('Failed to fetch repositories');
-      }
-
-      const reposData: GitHubRepository[] = await reposResponse.json();
-      setRepositories(reposData);
-
-      // Extract unique languages
-      const uniqueLanguages = [...new Set(
-        reposData
-          .map(r => r.language)
-          .filter((lang): lang is string => lang !== null)
-      )].sort();
-      setLanguages(uniqueLanguages);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [owner]);
-
-  // Fetch on mount and when owner changes
+  // Request owner data when owner changes
   useEffect(() => {
-    fetchOwnerData();
-  }, [fetchOwnerData]);
+    if (owner) {
+      events.emit({
+        type: 'owner-repositories:request',
+        source: 'owner-repositories-panel',
+        timestamp: Date.now(),
+        payload: { owner },
+      });
+    }
+  }, [events, owner]);
 
   // Sort and filter repositories
   const sortedAndFilteredRepos = React.useMemo(() => {
@@ -280,14 +239,14 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
                   color: theme.colors.textSecondary,
                 }}
               >
-                <span>{ownerInfo.public_repos} repositories</span>
+                <span>{repositories.length} repositories</span>
                 {ownerInfo.followers !== undefined && (
                   <span>{formatNumber(ownerInfo.followers)} followers</span>
                 )}
               </div>
             </div>
             <button
-              onClick={fetchOwnerData}
+              onClick={handleRefresh}
               style={{
                 padding: '8px',
                 borderRadius: '6px',
@@ -432,7 +391,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
             {error}
           </div>
           <button
-            onClick={fetchOwnerData}
+            onClick={handleRefresh}
             style={{
               padding: '8px 16px',
               borderRadius: '6px',
@@ -462,7 +421,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
           }}
         >
           <Github size={48} color={theme.colors.border} style={{ marginBottom: 16 }} />
-          <p style={{ margin: 0 }}>No public repositories found</p>
+          <p style={{ margin: 0 }}>No repositories found</p>
         </div>
       )}
 
@@ -511,6 +470,23 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
                 >
                   {repo.name}
                 </span>
+                {repo.private && (
+                  <span
+                    style={{
+                      fontSize: `${theme.fontSizes[0]}px`,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: theme.colors.backgroundTertiary,
+                      color: theme.colors.textSecondary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <Lock size={10} />
+                    Private
+                  </span>
+                )}
                 {repo.archived && (
                   <span
                     style={{
@@ -660,11 +636,19 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
  * OwnerRepositoriesPanel - A panel for browsing a GitHub user or organization's repositories
  *
  * Features:
- * - Shows all public repositories for a user/org
+ * - Shows repositories for a user/org (including private if authenticated)
  * - Displays owner info (avatar, bio, repo count)
  * - Sort by updated, stars, or name
  * - Filter by programming language
  * - Click to preview README, double-click to open
+ *
+ * Required data slice: 'owner-repositories' (OwnerRepositoriesSliceData)
+ *
+ * Events emitted:
+ * - 'owner-repositories:request' - Request data for a specific owner
+ * - 'owner-repositories:refresh' - Request a refresh of current data
+ * - 'repository:preview' - When a repo is clicked
+ * - 'repository:selected' - When a repo is double-clicked
  */
 export const OwnerRepositoriesPanel: React.FC<PanelComponentProps & { owner?: string }> = (props) => {
   return <OwnerRepositoriesPanelContent {...props} />;
@@ -678,7 +662,7 @@ export const OwnerRepositoriesPanelMetadata = {
   name: 'Owner Repositories',
   description: 'Browse repositories for a GitHub user or organization',
   icon: 'github',
-  version: '0.1.0',
-  slices: [],
+  version: '0.2.0',
+  slices: ['owner-repositories'],
   surfaces: ['panel'],
 };

@@ -102,6 +102,35 @@ export interface RepositoryPreviewEventPayload {
 }
 
 /**
+ * Owner info for OwnerRepositoriesPanel
+ */
+export interface OwnerInfo {
+  login: string;
+  avatar_url: string;
+  name?: string;
+  bio?: string;
+  type: 'User' | 'Organization';
+  public_repos: number;
+  followers?: number;
+  following?: number;
+}
+
+/**
+ * Owner repositories data slice structure
+ * This is what the OwnerRepositoriesPanel receives from context.getSlice('owner-repositories')
+ */
+export interface OwnerRepositoriesSliceData {
+  /** Owner info (user or organization) */
+  owner: OwnerInfo | null;
+  /** Repositories belonging to this owner */
+  repositories: GitHubRepository[];
+  /** Whether this data is for an authenticated view (includes private repos) */
+  isAuthenticated: boolean;
+  /** Error message if fetch failed */
+  error?: string;
+}
+
+/**
  * Custom event types for the GitHub panel
  */
 export type GitHubPanelEventType = 'repository:selected' | 'repository:preview';

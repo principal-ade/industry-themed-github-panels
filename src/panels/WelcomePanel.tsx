@@ -302,6 +302,49 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
         overflowY: 'auto',
       }}
     >
+      {/* Featured Organizations Section */}
+      {featuredOrganizations.length > 0 && (
+        <div
+          style={{
+            padding: '48px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            borderBottom: `1px solid ${theme.colors.border}`,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: `${theme.fontSizes[6] || 32}px`,
+              fontWeight: theme.fontWeights.semibold,
+              color: theme.colors.textSecondary,
+              textAlign: 'center',
+            }}
+          >
+            Explore software like never before
+          </h2>
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {featuredOrganizations.map((org) => (
+              <OrganizationCard
+                key={org.login}
+                org={org}
+                theme={theme}
+                onClick={() => handleOrganizationClick(org)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div
         style={{
@@ -317,12 +360,12 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
         <h1
           style={{
             margin: '0 0 32px',
-            fontSize: `${theme.fontSizes[6] || 32}px`,
+            fontSize: `${theme.fontSizes[3]}px`,
             fontWeight: theme.fontWeights.bold,
             color: theme.colors.text,
           }}
         >
-          Explore software like never before
+          Explore your Projects
         </h1>
 
         {/* Search Input */}
@@ -448,87 +491,6 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
         </div>
       </div>
 
-      {/* Featured Organizations Section */}
-      {featuredOrganizations.length > 0 && (
-        <div
-          style={{
-            padding: '0 32px 48px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: `${theme.fontSizes[3]}px`,
-              fontWeight: theme.fontWeights.semibold,
-              color: theme.colors.textSecondary,
-            }}
-          >
-            Explore Our Projects
-          </h2>
-          <div
-            style={{
-              display: 'flex',
-              gap: '16px',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
-            {featuredOrganizations.map((org) => (
-              <OrganizationCard
-                key={org.login}
-                org={org}
-                theme={theme}
-                onClick={() => handleOrganizationClick(org)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Start Hint */}
-      {highlightedProjects.length > 0 && (
-        <div
-          style={{
-            padding: '24px 32px 48px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: `${theme.fontSizes[1]}px`,
-              color: theme.colors.textSecondary,
-            }}
-          >
-            Check out our forks of popular repos:{' '}
-            {highlightedProjects.map((project, index) => (
-              <React.Fragment key={`${project.owner}/${project.repo}`}>
-                {index > 0 && (index === highlightedProjects.length - 1 ? ' or ' : ', ')}
-                <button
-                  onClick={() => handleProjectClick(project)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: theme.colors.primary,
-                    cursor: 'pointer',
-                    padding: 0,
-                    fontSize: 'inherit',
-                    fontWeight: theme.fontWeights.medium,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  {project.label || `${project.owner}/${project.repo}`}
-                </button>
-              </React.Fragment>
-            ))}
-          </p>
-        </div>
-      )}
     </div>
   );
 };
