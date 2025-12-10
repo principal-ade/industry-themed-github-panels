@@ -8,9 +8,6 @@ import {
   Calendar,
   ArrowUpDown,
   Filter,
-  Building2,
-  User,
-  RefreshCw,
   Lock,
 } from 'lucide-react';
 
@@ -180,99 +177,38 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header with owner info */}
+      {/* Header with repository count */}
       <div
         style={{
-          padding: '16px',
+          padding: '12px 16px',
           borderBottom: `1px solid ${theme.colors.border}`,
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
         }}
       >
-        {ownerInfo ? (
-          <>
-            <img
-              src={ownerInfo.avatar_url}
-              alt={ownerInfo.login}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: ownerInfo.type === 'Organization' ? 8 : '50%',
-                border: `2px solid ${theme.colors.border}`,
-              }}
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontSize: `${theme.fontSizes[4]}px`,
-                    fontWeight: theme.fontWeights.bold,
-                  }}
-                >
-                  {ownerInfo.name || ownerInfo.login}
-                </h2>
-                {ownerInfo.type === 'Organization' ? (
-                  <Building2 size={16} color={theme.colors.textSecondary} />
-                ) : (
-                  <User size={16} color={theme.colors.textSecondary} />
-                )}
-              </div>
-              {ownerInfo.bio && (
-                <p
-                  style={{
-                    margin: '4px 0 0',
-                    fontSize: `${theme.fontSizes[1]}px`,
-                    color: theme.colors.textSecondary,
-                  }}
-                >
-                  {ownerInfo.bio}
-                </p>
-              )}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '12px',
-                  marginTop: '4px',
-                  fontSize: `${theme.fontSizes[1]}px`,
-                  color: theme.colors.textSecondary,
-                }}
-              >
-                <span>{repositories.length} repositories</span>
-                {ownerInfo.followers !== undefined && (
-                  <span>{formatNumber(ownerInfo.followers)} followers</span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={handleRefresh}
-              style={{
-                padding: '8px',
-                borderRadius: '6px',
-                border: `1px solid ${theme.colors.border}`,
-                background: 'transparent',
-                cursor: 'pointer',
-                color: theme.colors.textSecondary,
-              }}
-              title="Refresh"
-            >
-              <RefreshCw size={16} />
-            </button>
-          </>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Github size={24} color={theme.colors.primary} />
-            <h2
-              style={{
-                margin: 0,
-                fontSize: `${theme.fontSizes[3]}px`,
-                fontWeight: theme.fontWeights.semibold,
-              }}
-            >
-              {owner || 'Repositories'}
-            </h2>
-          </div>
+        <Github size={18} color={theme.colors.primary} />
+        <span
+          style={{
+            fontSize: `${theme.fontSizes[2]}px`,
+            fontWeight: theme.fontWeights.medium,
+            color: theme.colors.text,
+          }}
+        >
+          Repositories
+        </span>
+        {!isLoading && repositories.length > 0 && (
+          <span
+            style={{
+              fontSize: `${theme.fontSizes[1]}px`,
+              color: theme.colors.textSecondary,
+              padding: '2px 8px',
+              borderRadius: '12px',
+              backgroundColor: theme.colors.backgroundSecondary,
+            }}
+          >
+            {repositories.length}
+          </span>
         )}
       </div>
 
