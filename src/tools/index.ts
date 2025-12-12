@@ -181,6 +181,58 @@ export const requestGitHubLoginTool: PanelTool = {
 };
 
 /**
+ * Tool: List Issues
+ *
+ * Request the list of issues for the current repository.
+ */
+export const listIssuesTool: PanelTool = {
+  name: 'list_issues',
+  description: 'Get a list of GitHub issues for the current repository.',
+  inputs: {
+    type: 'object',
+    properties: {},
+    required: [],
+  },
+  outputs: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+    },
+  },
+  tags: ['github', 'issues', 'list', 'browse'],
+  tool_call_template: {
+    call_template_type: 'panel_event',
+    event_type: 'github-issues:request',
+  },
+};
+
+/**
+ * Tool: Refresh Issues
+ *
+ * Refresh the list of issues for the current repository.
+ */
+export const refreshIssuesTool: PanelTool = {
+  name: 'refresh_issues',
+  description: 'Refresh the list of GitHub issues for the current repository.',
+  inputs: {
+    type: 'object',
+    properties: {},
+    required: [],
+  },
+  outputs: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+    },
+  },
+  tags: ['github', 'issues', 'refresh', 'update'],
+  tool_call_template: {
+    call_template_type: 'panel_event',
+    event_type: 'github-issues:refresh',
+  },
+};
+
+/**
  * All GitHub tools exported as an array.
  */
 export const githubTools: PanelTool[] = [
@@ -190,6 +242,8 @@ export const githubTools: PanelTool[] = [
   searchRepositoriesTool,
   openRepositorySwitcherTool,
   requestGitHubLoginTool,
+  listIssuesTool,
+  refreshIssuesTool,
 ];
 
 /**

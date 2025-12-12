@@ -7,6 +7,8 @@ import {
   Github,
   Sparkles,
   ExternalLink,
+  FolderOpen,
+  ChevronRight,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -29,6 +31,18 @@ export interface FeaturedOrganization {
 }
 
 /**
+ * Curated collection of repositories
+ */
+export interface CuratedCollection {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  theme?: string;
+  repositoryCount?: number;
+}
+
+/**
  * Props for the WelcomePanel
  */
 export interface WelcomePanelProps extends PanelComponentProps {
@@ -36,6 +50,8 @@ export interface WelcomePanelProps extends PanelComponentProps {
   highlightedProjects?: HighlightedProject[];
   featuredOrganizations?: FeaturedOrganization[];
   onOrganizationClick?: (org: string) => void;
+  curatedCollections?: CuratedCollection[];
+  onCollectionClick?: (collectionId: string) => void;
 }
 
 /**
@@ -160,31 +176,29 @@ const defaultHighlightedProjects: HighlightedProject[] = [
   { owner: 'vercel', repo: 'next.js' },
 ];
 
-// Default featured organizations
-const defaultFeaturedOrganizations: FeaturedOrganization[] = [];
-
 /**
- * Organization card component
+ * Collection card component
  */
-const OrganizationCard: React.FC<{
-  org: FeaturedOrganization;
+const CollectionCard: React.FC<{
+  collection: CuratedCollection;
   theme: ReturnType<typeof useTheme>['theme'];
   onClick: () => void;
-}> = ({ org, theme, onClick }) => {
+}> = ({ collection, theme, onClick }) => {
   return (
     <button
       onClick={onClick}
       style={{
-        padding: '16px 20px',
+        padding: '20px 24px',
         borderRadius: '12px',
         backgroundColor: theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
+        gap: '16px',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
-        minWidth: '240px',
+        minWidth: '280px',
+        maxWidth: '320px',
         textAlign: 'left',
       }}
       onMouseEnter={(e) => {
@@ -196,42 +210,57 @@ const OrganizationCard: React.FC<{
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      {/* Organization Avatar */}
-      <img
-        src={`https://github.com/${org.login}.png?size=64`}
-        alt={org.login}
+      {/* Collection Icon */}
+      <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: '8px',
+          width: 48,
+          height: 48,
+          borderRadius: '10px',
+          backgroundColor: `${theme.colors.primary}15`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: theme.colors.primary,
           flexShrink: 0,
         }}
-      />
+      >
+        <FolderOpen size={24} />
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
             fontSize: `${theme.fontSizes[2]}px`,
             fontWeight: theme.fontWeights.semibold,
             color: theme.colors.text,
-            marginBottom: org.description ? '2px' : 0,
+            marginBottom: '4px',
           }}
         >
-          {org.login}
+          {collection.name}
         </div>
-        {org.description && (
+        <div
+          style={{
+            fontSize: `${theme.fontSizes[1]}px`,
+            color: theme.colors.textSecondary,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {collection.description}
+        </div>
+        {collection.repositoryCount !== undefined && (
           <div
             style={{
-              fontSize: `${theme.fontSizes[1]}px`,
+              fontSize: `${theme.fontSizes[0]}px`,
               color: theme.colors.textSecondary,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              marginTop: '4px',
             }}
           >
-            {org.description}
+            {collection.repositoryCount} repositories
           </div>
         )}
       </div>
+      <ChevronRight size={20} style={{ color: theme.colors.textSecondary, flexShrink: 0 }} />
     </button>
   );
 };
@@ -248,8 +277,8 @@ const OrganizationCard: React.FC<{
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({
   onNavigate,
   highlightedProjects = defaultHighlightedProjects,
-  featuredOrganizations = defaultFeaturedOrganizations,
-  onOrganizationClick,
+  curatedCollections = [],
+  onCollectionClick,
 }) => {
   const { theme } = useTheme();
   const [repoInput, setRepoInput] = useState('');
@@ -281,14 +310,11 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
     }
   }, [onNavigate]);
 
-  const handleOrganizationClick = useCallback((org: FeaturedOrganization) => {
-    if (onOrganizationClick) {
-      onOrganizationClick(org.login);
-    } else {
-      // Default: open GitHub org page
-      window.open(`https://github.com/${org.login}`, '_blank');
+  const handleCollectionClick = useCallback((collection: CuratedCollection) => {
+    if (onCollectionClick) {
+      onCollectionClick(collection.id);
     }
-  }, [onOrganizationClick]);
+  }, [onCollectionClick]);
 
   return (
     <div
@@ -302,15 +328,15 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
         overflowY: 'auto',
       }}
     >
-      {/* Featured Organizations Section */}
-      {featuredOrganizations.length > 0 && (
+      {/* Curated Collections Section */}
+      {curatedCollections.length > 0 && (
         <div
           style={{
             padding: '48px 32px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '16px',
+            gap: '24px',
             borderBottom: `1px solid ${theme.colors.border}`,
           }}
         >
@@ -323,7 +349,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
               textAlign: 'center',
             }}
           >
-            Explore software like never before
+            Explore Curated Collections
           </h2>
           <div
             style={{
@@ -331,14 +357,15 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({
               gap: '16px',
               flexWrap: 'wrap',
               justifyContent: 'center',
+              maxWidth: '1200px',
             }}
           >
-            {featuredOrganizations.map((org) => (
-              <OrganizationCard
-                key={org.login}
-                org={org}
+            {curatedCollections.map((collection) => (
+              <CollectionCard
+                key={collection.id}
+                collection={collection}
                 theme={theme}
-                onClick={() => handleOrganizationClick(org)}
+                onClick={() => handleCollectionClick(collection)}
               />
             ))}
           </div>

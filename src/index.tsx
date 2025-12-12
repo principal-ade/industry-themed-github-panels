@@ -1,5 +1,6 @@
 import { GitHubProjectsPanel, GitHubProjectsPanelMetadata } from './panels/GitHubProjectsPanel';
 import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSearchPanel';
+import { GitHubIssuesPanel, GitHubIssuesPanelMetadata } from './panels/GitHubIssuesPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
 import { WelcomePanel, WelcomePanelMetadata } from './panels/WelcomePanel';
@@ -46,6 +47,26 @@ export const panels: PanelDefinition[] = [
     onUnmount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('GitHub Search Panel unmounting');
+    },
+  },
+  {
+    metadata: GitHubIssuesPanelMetadata,
+    component: GitHubIssuesPanel,
+
+    onMount: async (context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Issues Panel mounted');
+
+      // Refresh issues data if available
+      const slice = context.getSlice('github-issues');
+      if (slice && !slice.loading) {
+        await slice.refresh();
+      }
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Issues Panel unmounting');
     },
   },
   {
@@ -114,11 +135,12 @@ export const onPackageUnload = async () => {
 export { GitHubProjectCard } from './components/GitHubProjectCard';
 export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
+export { GitHubIssuesPanel } from './panels/GitHubIssuesPanel';
 export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
 export { WelcomePanel } from './panels/WelcomePanel';
-export type { WelcomePanelProps, HighlightedProject, FeaturedOrganization } from './panels/WelcomePanel';
+export type { WelcomePanelProps, HighlightedProject, FeaturedOrganization, CuratedCollection } from './panels/WelcomePanel';
 
 // Export types
 export type {
@@ -129,6 +151,11 @@ export type {
   RepositorySelectedEventPayload,
   RepositoryPreviewEventPayload,
   GitHubPanelEventType,
+  GitHubIssue,
+  GitHubIssueLabel,
+  GitHubIssueUser,
+  GitHubIssuesSliceData,
+  IssueSelectedEventPayload,
 } from './types/github';
 
 // Export tools
@@ -141,4 +168,6 @@ export {
   searchRepositoriesTool,
   openRepositorySwitcherTool,
   requestGitHubLoginTool,
+  listIssuesTool,
+  refreshIssuesTool,
 } from './tools';

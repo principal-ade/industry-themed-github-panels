@@ -134,3 +134,73 @@ export interface OwnerRepositoriesSliceData {
  * Custom event types for the GitHub panel
  */
 export type GitHubPanelEventType = 'repository:selected' | 'repository:preview';
+
+// ============================================================================
+// Issues
+// ============================================================================
+
+/**
+ * GitHub Issue label
+ */
+export interface GitHubIssueLabel {
+  id: number;
+  name: string;
+  color: string;
+}
+
+/**
+ * GitHub user (for issue author/assignees)
+ */
+export interface GitHubIssueUser {
+  login: string;
+  avatar_url: string;
+}
+
+/**
+ * GitHub Issue data structure
+ * Matches the GitHub API response format
+ */
+export interface GitHubIssue {
+  id: number;
+  number: number;
+  title: string;
+  state: 'open' | 'closed';
+  body: string | null;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  labels: GitHubIssueLabel[];
+  comments: number;
+  user: GitHubIssueUser;
+  assignees: GitHubIssueUser[];
+}
+
+/**
+ * GitHub issues data slice structure
+ * This is what the GitHubIssuesPanel receives from context.getSlice('github-issues')
+ */
+export interface GitHubIssuesSliceData {
+  /** List of issues for the repository */
+  issues: GitHubIssue[];
+  /** Repository owner */
+  owner: string;
+  /** Repository name */
+  repo: string;
+  /** Whether the user is authenticated with GitHub */
+  isAuthenticated: boolean;
+  /** Error message if fetch failed */
+  error?: string;
+}
+
+/**
+ * Payload for issue:selected event
+ * Emitted when a user selects an issue
+ */
+export interface IssueSelectedEventPayload {
+  /** The selected issue */
+  issue: GitHubIssue;
+  /** Repository owner */
+  owner: string;
+  /** Repository name */
+  repo: string;
+}
