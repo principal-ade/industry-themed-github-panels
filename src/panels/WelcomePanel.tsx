@@ -9,7 +9,32 @@ import {
   ExternalLink,
   FolderOpen,
   ChevronRight,
+  Wrench,
+  Atom,
+  Cog,
+  Cpu,
+  Zap,
+  Code,
+  Layers,
+  Box,
+  type LucideIcon,
 } from 'lucide-react';
+
+// Map icon names to components
+const iconMap: Record<string, LucideIcon> = {
+  Sparkles,
+  Wrench,
+  Atom,
+  Cog,
+  Cpu,
+  Zap,
+  Code,
+  Layers,
+  Box,
+  FolderOpen,
+  BookOpen,
+  Network,
+};
 
 import type { PanelComponentProps } from '../types';
 
@@ -184,6 +209,9 @@ const CollectionCard: React.FC<{
   theme: ReturnType<typeof useTheme>['theme'];
   onClick: () => void;
 }> = ({ collection, theme, onClick }) => {
+  // Get the icon component from the map, fallback to FolderOpen
+  const IconComponent = (collection.icon && iconMap[collection.icon]) || FolderOpen;
+
   return (
     <button
       onClick={onClick}
@@ -224,7 +252,7 @@ const CollectionCard: React.FC<{
           flexShrink: 0,
         }}
       >
-        <FolderOpen size={24} />
+        <IconComponent size={24} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
