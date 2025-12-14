@@ -3,7 +3,6 @@ import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSea
 import { GitHubIssuesPanel, GitHubIssuesPanelMetadata } from './panels/GitHubIssuesPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
-import { WelcomePanel, WelcomePanelMetadata } from './panels/WelcomePanel';
 import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
 import { githubTools, githubToolsMetadata } from './tools';
 
@@ -97,20 +96,6 @@ export const panels: PanelDefinition[] = [
       console.log('Recent Repositories Panel unmounting');
     },
   },
-  {
-    metadata: WelcomePanelMetadata,
-    component: WelcomePanel,
-
-    onMount: async (_context: PanelContextValue) => {
-      // eslint-disable-next-line no-console
-      console.log('Welcome Panel mounted');
-    },
-
-    onUnmount: async (_context: PanelContextValue) => {
-      // eslint-disable-next-line no-console
-      console.log('Welcome Panel unmounting');
-    },
-  },
 ];
 
 /**
@@ -139,8 +124,6 @@ export { GitHubIssuesPanel } from './panels/GitHubIssuesPanel';
 export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
-export { WelcomePanel } from './panels/WelcomePanel';
-export type { WelcomePanelProps, HighlightedProject, FeaturedOrganization, CuratedCollection } from './panels/WelcomePanel';
 
 // Export types
 export type {
