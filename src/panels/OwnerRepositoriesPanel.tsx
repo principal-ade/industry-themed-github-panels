@@ -6,30 +6,33 @@ import {
   GitFork,
   ExternalLink,
   Calendar,
-  ArrowUpDown,
-  Filter,
   Lock,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
 import type { GitHubRepository, RepositoryPreviewEventPayload, OwnerRepositoriesSliceData } from '../types/github';
 
-type SortField = 'updated' | 'stars' | 'name' | 'created';
+type SortField = 'name' | 'updated';
 type SortOrder = 'asc' | 'desc';
+
+export interface OwnerRepositoriesPanelProps extends PanelComponentProps {
+  owner?: string;
+  selectedRepository?: string; // full_name like "owner/repo"
+}
 
 /**
  * OwnerRepositoriesPanelContent - Internal component that uses theme
  */
-const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: string }> = ({
+const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
   events,
   context,
   owner: propOwner,
+  selectedRepository,
 }) => {
   const { theme } = useTheme();
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
-  const [sortField, setSortField] = useState<SortField>('updated');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [languageFilter, setLanguageFilter] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   // Get owner from prop or context
   const owner = propOwner || (context?.currentScope?.repository as { name?: string })?.name;
@@ -42,15 +45,6 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
   const repositories = ownerSlice?.data?.repositories ?? [];
   const error = ownerSlice?.data?.error ?? null;
   const isAuthenticated = ownerSlice?.data?.isAuthenticated ?? false;
-
-  // Extract unique languages from repositories
-  const languages = React.useMemo(() => {
-    return [...new Set(
-      repositories
-        .map(r => r.language)
-        .filter((lang): lang is string => lang !== null)
-    )].sort();
-  }, [repositories]);
 
   // Request data refresh
   const handleRefresh = useCallback(() => {
@@ -74,37 +68,50 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
     }
   }, [events, owner]);
 
-  // Sort and filter repositories
-  const sortedAndFilteredRepos = React.useMemo(() => {
-    let filtered = repositories;
-
-    // Apply language filter
-    if (languageFilter) {
-      filtered = filtered.filter(r => r.language === languageFilter);
+  // Sync selectedRepository prop with internal state
+  useEffect(() => {
+    if (selectedRepository && repositories.length > 0) {
+      const repo = repositories.find(r => r.full_name === selectedRepository);
+      if (repo) {
+        setSelectedRepoId(repo.id);
+      }
     }
+  }, [selectedRepository, repositories]);
 
-    // Apply sorting
-    return [...filtered].sort((a, b) => {
+  // Listen for repository:preview events to sync selection
+  useEffect(() => {
+    const unsubscribe = events.on('repository:preview', (event) => {
+      const payload = event.payload as { repository?: { id?: number; full_name?: string } };
+      if (payload?.repository?.id) {
+        setSelectedRepoId(payload.repository.id);
+      } else if (payload?.repository?.full_name && repositories.length > 0) {
+        const repo = repositories.find(r => r.full_name === payload.repository?.full_name);
+        if (repo) {
+          setSelectedRepoId(repo.id);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [events, repositories]);
+
+  // Sort repositories
+  const sortedRepos = React.useMemo(() => {
+    return [...repositories].sort((a, b) => {
       let comparison = 0;
 
       switch (sortField) {
-        case 'updated':
-          comparison = new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
-          break;
-        case 'stars':
-          comparison = (b.stargazers_count || 0) - (a.stargazers_count || 0);
-          break;
         case 'name':
           comparison = a.name.localeCompare(b.name);
           break;
-        case 'created':
-          comparison = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        case 'updated':
+          comparison = new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
           break;
       }
 
       return sortOrder === 'desc' ? comparison : -comparison;
     });
-  }, [repositories, sortField, sortOrder, languageFilter]);
+  }, [repositories, sortField, sortOrder]);
 
   // Handle repository preview (click to show README)
   const handleSelectRepository = (repo: GitHubRepository) => {
@@ -156,13 +163,14 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
-  // Toggle sort
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortField(field);
+  // Toggle sort between name and updated
+  const toggleSort = () => {
+    if (sortField === 'name') {
+      setSortField('updated');
       setSortOrder('desc');
+    } else {
+      setSortField('name');
+      setSortOrder('asc');
     }
   };
 
@@ -177,10 +185,12 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header with repository count */}
+      {/* Header with repository count and sort toggle */}
       <div
         style={{
-          padding: '12px 16px',
+          height: '40px',
+          minHeight: '40px',
+          padding: '0 16px',
           borderBottom: `1px solid ${theme.colors.border}`,
           display: 'flex',
           alignItems: 'center',
@@ -198,82 +208,39 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
           Repositories
         </span>
         {!isLoading && repositories.length > 0 && (
-          <span
-            style={{
-              fontSize: `${theme.fontSizes[1]}px`,
-              color: theme.colors.textSecondary,
-              padding: '2px 8px',
-              borderRadius: '12px',
-              backgroundColor: theme.colors.backgroundSecondary,
-            }}
-          >
-            {repositories.length}
-          </span>
+          <>
+            <span
+              style={{
+                fontSize: `${theme.fontSizes[1]}px`,
+                color: theme.colors.textSecondary,
+                padding: '2px 8px',
+                borderRadius: '12px',
+                backgroundColor: theme.colors.backgroundSecondary,
+              }}
+            >
+              {repositories.length}
+            </span>
+            <button
+              onClick={toggleSort}
+              style={{
+                marginLeft: 'auto',
+                padding: '4px 10px',
+                borderRadius: '4px',
+                border: `1px solid ${theme.colors.border}`,
+                background: theme.colors.backgroundSecondary,
+                color: theme.colors.text,
+                fontSize: `${theme.fontSizes[1]}px`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              {sortField === 'name' ? 'A-Z' : 'Recent'}
+            </button>
+          </>
         )}
       </div>
-
-      {/* Sort and Filter Controls */}
-      {!isLoading && !error && repositories.length > 0 && (
-        <div
-          style={{
-            padding: '8px 16px',
-            borderBottom: `1px solid ${theme.colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Sort buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowUpDown size={14} color={theme.colors.textSecondary} />
-            {(['updated', 'stars', 'name'] as SortField[]).map((field) => (
-              <button
-                key={field}
-                onClick={() => handleSort(field)}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: sortField === field ? theme.colors.primary : theme.colors.backgroundSecondary,
-                  color: sortField === field ? theme.colors.background : theme.colors.text,
-                  fontSize: `${theme.fontSizes[1]}px`,
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                }}
-              >
-                {field}
-                {sortField === field && (sortOrder === 'desc' ? ' ↓' : ' ↑')}
-              </button>
-            ))}
-          </div>
-
-          {/* Language filter */}
-          {languages.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
-              <Filter size={14} color={theme.colors.textSecondary} />
-              <select
-                value={languageFilter || ''}
-                onChange={(e) => setLanguageFilter(e.target.value || null)}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: `1px solid ${theme.colors.border}`,
-                  background: theme.colors.backgroundSecondary,
-                  color: theme.colors.text,
-                  fontSize: `${theme.fontSizes[1]}px`,
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="">All languages</option>
-                {languages.map((lang) => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Loading State */}
       {isLoading && (
@@ -362,7 +329,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
       )}
 
       {/* Repository List */}
-      {!isLoading && !error && sortedAndFilteredRepos.length > 0 && (
+      {!isLoading && !error && sortedRepos.length > 0 && (
         <div
           style={{
             flex: 1,
@@ -370,7 +337,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
             padding: '8px',
           }}
         >
-          {sortedAndFilteredRepos.map((repo) => (
+          {sortedRepos.map((repo) => (
             <button
               key={repo.id}
               type="button"
@@ -526,38 +493,6 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
         </div>
       )}
 
-      {/* Filtered empty state */}
-      {!isLoading && !error && repositories.length > 0 && sortedAndFilteredRepos.length === 0 && (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '32px',
-            color: theme.colors.textSecondary,
-          }}
-        >
-          <Filter size={48} color={theme.colors.border} style={{ marginBottom: 16 }} />
-          <p style={{ margin: 0 }}>No repositories match the current filter</p>
-          <button
-            onClick={() => setLanguageFilter(null)}
-            style={{
-              marginTop: '12px',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: `1px solid ${theme.colors.border}`,
-              background: 'transparent',
-              color: theme.colors.text,
-              cursor: 'pointer',
-            }}
-          >
-            Clear filter
-          </button>
-        </div>
-      )}
-
       {/* CSS for spinner animation */}
       <style>{`
         @keyframes spin {
@@ -571,11 +506,14 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
 /**
  * OwnerRepositoriesPanel - A panel for browsing a GitHub user or organization's repositories
  *
+ * Props:
+ * - owner: GitHub username or organization name
+ * - selectedRepository: Full name of the selected repo (e.g., "owner/repo")
+ *
  * Features:
  * - Shows repositories for a user/org (including private if authenticated)
- * - Displays owner info (avatar, bio, repo count)
- * - Sort by updated, stars, or name
- * - Filter by programming language
+ * - Toggle between name (A-Z) and recently updated sorting
+ * - Syncs selection with selectedRepository prop and repository:preview events
  * - Click to preview README, double-click to open
  *
  * Required data slice: 'owner-repositories' (OwnerRepositoriesSliceData)
@@ -586,7 +524,7 @@ const OwnerRepositoriesPanelContent: React.FC<PanelComponentProps & { owner?: st
  * - 'repository:preview' - When a repo is clicked
  * - 'repository:selected' - When a repo is double-clicked
  */
-export const OwnerRepositoriesPanel: React.FC<PanelComponentProps & { owner?: string }> = (props) => {
+export const OwnerRepositoriesPanel: React.FC<OwnerRepositoriesPanelProps> = (props) => {
   return <OwnerRepositoriesPanelContent {...props} />;
 };
 
