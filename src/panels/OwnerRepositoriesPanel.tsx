@@ -105,7 +105,7 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
           comparison = a.name.localeCompare(b.name);
           break;
         case 'updated':
-          comparison = new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+          comparison = new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime();
           break;
       }
 
