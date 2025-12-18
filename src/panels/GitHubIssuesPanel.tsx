@@ -349,11 +349,14 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
       {/* Header */}
       <div
         style={{
-          padding: '12px 16px',
+          height: '40px',
+          minHeight: '40px',
+          padding: '0 16px',
           borderBottom: `1px solid ${theme.colors.border}`,
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
+          boxSizing: 'border-box',
         }}
       >
         <Github size={20} color={theme.colors.primary} />
@@ -506,7 +509,7 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
       </div>
 
       {/* Issues List */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         {filteredIssues.length === 0 ? (
           <div
             style={{
@@ -538,7 +541,7 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
           </div>
         ) : (
           <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            style={{ display: 'flex', flexDirection: 'column' }}
           >
             {filteredIssues.map((issue) => (
               <button
@@ -547,9 +550,10 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
                 onClick={(e) => handleIssueClick(issue, e)}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: `1px solid ${
+                  padding: '8px 12px',
+                  borderRadius: 0,
+                  border: 'none',
+                  borderBottom: `1px solid ${
                     selectedIssues.has(issue.number)
                       ? theme.colors.primary
                       : theme.colors.border

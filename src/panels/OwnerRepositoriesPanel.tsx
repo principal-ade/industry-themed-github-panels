@@ -31,8 +31,8 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
 }) => {
   const { theme } = useTheme();
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortField, setSortField] = useState<SortField>('updated');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // Get owner from prop or context
   const owner = propOwner || (context?.currentScope?.repository as { name?: string })?.name;
@@ -109,7 +109,7 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
           break;
       }
 
-      return sortOrder === 'desc' ? comparison : -comparison;
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
   }, [repositories, sortField, sortOrder]);
 
@@ -195,6 +195,7 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
+          boxSizing: 'border-box',
         }}
       >
         <Github size={18} color={theme.colors.primary} />
@@ -334,7 +335,6 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '8px',
           }}
         >
           {sortedRepos.map((repo) => (
@@ -345,10 +345,11 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
               onDoubleClick={() => handleOpenRepository(repo)}
               style={{
                 width: '100%',
-                padding: '12px',
-                margin: '4px 0',
-                borderRadius: '8px',
-                border: selectedRepoId === repo.id
+                padding: '8px 12px',
+                margin: 0,
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: selectedRepoId === repo.id
                   ? `2px solid ${theme.colors.primary}`
                   : `1px solid ${theme.colors.border}`,
                 backgroundColor: selectedRepoId === repo.id
