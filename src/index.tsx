@@ -1,6 +1,7 @@
 import { GitHubProjectsPanel, GitHubProjectsPanelMetadata } from './panels/GitHubProjectsPanel';
 import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSearchPanel';
 import { GitHubIssuesPanel, GitHubIssuesPanelMetadata } from './panels/GitHubIssuesPanel';
+import { GitHubIssueDetailPanel, GitHubIssueDetailPanelMetadata } from './panels/GitHubIssueDetailPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
 import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
@@ -69,6 +70,20 @@ export const panels: PanelDefinition[] = [
     },
   },
   {
+    metadata: GitHubIssueDetailPanelMetadata,
+    component: GitHubIssueDetailPanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Issue Detail Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Issue Detail Panel unmounting');
+    },
+  },
+  {
     metadata: OwnerRepositoriesPanelMetadata,
     component: OwnerRepositoriesPanel,
 
@@ -121,6 +136,7 @@ export { GitHubProjectCard } from './components/GitHubProjectCard';
 export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
 export { GitHubIssuesPanel } from './panels/GitHubIssuesPanel';
+export { GitHubIssueDetailPanel } from './panels/GitHubIssueDetailPanel';
 export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';

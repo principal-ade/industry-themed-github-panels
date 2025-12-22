@@ -10,7 +10,6 @@ import {
   Calendar,
   MessageSquare,
   Loader2,
-  X,
   RefreshCw,
   LogIn,
 } from 'lucide-react';
@@ -65,8 +64,6 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
   const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set());
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [issueFilter, setIssueFilter] = useState<IssueFilter>('open');
-  const [selectedIssue, setSelectedIssue] = useState<GitHubIssue | null>(null);
-  const [showIssueModal, setShowIssueModal] = useState(false);
 
   // Request issues data on mount
   useEffect(() => {
@@ -117,10 +114,8 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
     if (target.tagName === 'INPUT' || target.closest('a')) {
       return;
     }
-    setSelectedIssue(issue);
-    setShowIssueModal(true);
 
-    // Emit issue selected event
+    // Emit issue selected event for detail panel
     events.emit<IssueSelectedEventPayload>({
       type: 'issue:selected',
       source: 'github-issues-panel',
@@ -754,276 +749,6 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
         )}
       </div>
 
-      {/* Issue Detail Modal */}
-      {showIssueModal && selectedIssue && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => {
-            setShowIssueModal(false);
-            setSelectedIssue(null);
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: theme.colors.background,
-              borderRadius: '12px',
-              width: '90%',
-              maxWidth: '700px',
-              maxHeight: '80vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-              border: `1px solid ${theme.colors.border}`,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                padding: '20px',
-                borderBottom: `1px solid ${theme.colors.border}`,
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '4px 10px',
-                      borderRadius: '12px',
-                      backgroundColor:
-                        selectedIssue.state === 'open'
-                          ? '#22c55e22'
-                          : '#6b728022',
-                      color:
-                        selectedIssue.state === 'open' ? '#22c55e' : '#6b7280',
-                      fontSize: `${theme.fontSizes[1]}px`,
-                      fontWeight: theme.fontWeights.semibold,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {selectedIssue.state}
-                  </span>
-                  <span
-                    style={{
-                      color: theme.colors.textSecondary,
-                      fontSize: `${theme.fontSizes[2]}px`,
-                    }}
-                  >
-                    #{selectedIssue.number}
-                  </span>
-                </div>
-                <h2
-                  style={{
-                    color: theme.colors.text,
-                    fontSize: `${theme.fontSizes[4]}px`,
-                    fontWeight: theme.fontWeights.semibold,
-                    margin: 0,
-                  }}
-                >
-                  {selectedIssue.title}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowIssueModal(false);
-                  setSelectedIssue(null);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: theme.colors.textSecondary,
-                  cursor: 'pointer',
-                  padding: '8px',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div
-              style={{
-                flex: 1,
-                overflow: 'auto',
-                padding: '20px',
-              }}
-            >
-              {/* Issue Metadata */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '20px',
-                  marginBottom: '20px',
-                  fontSize: `${theme.fontSizes[2]}px`,
-                  color: theme.colors.textSecondary,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <span
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <img
-                    src={selectedIssue.user.avatar_url}
-                    alt={selectedIssue.user.login}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                    }}
-                  />
-                  <strong style={{ color: theme.colors.text }}>
-                    {selectedIssue.user.login}
-                  </strong>{' '}
-                  opened
-                </span>
-                <span
-                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <Calendar size={14} />
-                  {formatDate(selectedIssue.created_at)}
-                </span>
-                {selectedIssue.comments > 0 && (
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <MessageSquare size={14} />
-                    {selectedIssue.comments}{' '}
-                    {selectedIssue.comments === 1 ? 'comment' : 'comments'}
-                  </span>
-                )}
-              </div>
-
-              {/* Labels */}
-              {selectedIssue.labels.length > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  {selectedIssue.labels.map((label) => (
-                    <span
-                      key={label.id}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '4px 12px',
-                        borderRadius: '16px',
-                        backgroundColor: `#${label.color}22`,
-                        color: `#${label.color}`,
-                        fontSize: `${theme.fontSizes[1]}px`,
-                        fontWeight: theme.fontWeights.medium,
-                      }}
-                    >
-                      <Tag size={12} />
-                      {label.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Issue Body */}
-              {selectedIssue.body && (
-                <div
-                  style={{
-                    backgroundColor: theme.colors.backgroundSecondary,
-                    borderRadius: '8px',
-                    padding: '16px',
-                    border: `1px solid ${theme.colors.border}`,
-                  }}
-                >
-                  <h3
-                    style={{
-                      color: theme.colors.text,
-                      fontSize: `${theme.fontSizes[2]}px`,
-                      fontWeight: theme.fontWeights.semibold,
-                      marginTop: 0,
-                      marginBottom: '12px',
-                    }}
-                  >
-                    Description
-                  </h3>
-                  <div
-                    style={{
-                      color: theme.colors.text,
-                      fontSize: `${theme.fontSizes[2]}px`,
-                      lineHeight: 1.6,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {selectedIssue.body}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                padding: '16px 20px',
-                borderTop: `1px solid ${theme.colors.border}`,
-                gap: '12px',
-              }}
-            >
-              <a
-                href={selectedIssue.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: theme.colors.primary,
-                  color: theme.colors.background,
-                  fontSize: `${theme.fontSizes[2]}px`,
-                  fontWeight: theme.fontWeights.medium,
-                  textDecoration: 'none',
-                }}
-              >
-                <ExternalLink size={14} />
-                View on GitHub
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* CSS for animations */}
       <style>{`
         @keyframes spin {
@@ -1043,7 +768,7 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
  * Features:
  * - View issues with filtering (open/closed/all)
  * - Select issues and copy as AI prompt
- * - Issue detail modal
+ * - Emits 'issue:selected' event for detail panel
  * - External links to GitHub
  */
 export const GitHubIssuesPanel: React.FC<PanelComponentProps> = (props) => {
