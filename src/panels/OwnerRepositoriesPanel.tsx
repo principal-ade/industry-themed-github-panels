@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import {
   Github,
@@ -7,6 +7,8 @@ import {
   ExternalLink,
   Calendar,
   Lock,
+  Search,
+  X,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -18,6 +20,8 @@ type SortOrder = 'asc' | 'desc';
 export interface OwnerRepositoriesPanelProps extends PanelComponentProps {
   owner?: string;
   selectedRepository?: string; // full_name like "owner/repo"
+  /** Whether to show the search bar by default */
+  defaultShowSearch?: boolean;
 }
 
 /**
@@ -28,11 +32,28 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
   context,
   owner: propOwner,
   selectedRepository,
+  defaultShowSearch = false,
 }) => {
   const { theme } = useTheme();
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField>('updated');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [filter, setFilter] = useState('');
+  const [showSearch, setShowSearch] = useState(defaultShowSearch);
+
+  // Toggle search and clear filter when closing
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prev) => {
+      if (prev) {
+        setFilter('');
+      }
+      return !prev;
+    });
+  }, []);
+
+  const handleClearFilter = useCallback(() => {
+    setFilter('');
+  }, []);
 
   // Get owner from prop or context
   const owner = propOwner || (context?.currentScope?.repository as { name?: string })?.name;
@@ -95,9 +116,29 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
     return () => unsubscribe();
   }, [events, repositories]);
 
-  // Sort repositories
-  const sortedRepos = React.useMemo(() => {
-    return [...repositories].sort((a, b) => {
+  // Filter and sort repositories
+  const normalizedFilter = filter.trim().toLowerCase();
+
+  const filteredAndSortedRepos = useMemo(() => {
+    // Filter repositories by search term
+    let filtered = repositories;
+    if (normalizedFilter) {
+      filtered = repositories.filter((repo) => {
+        const haystack = [
+          repo.name,
+          repo.full_name,
+          repo.owner?.login ?? '',
+          repo.description ?? '',
+          repo.language ?? '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(normalizedFilter);
+      });
+    }
+
+    // Sort repositories
+    return [...filtered].sort((a, b) => {
       let comparison = 0;
 
       switch (sortField) {
@@ -111,7 +152,7 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
 
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [repositories, sortField, sortOrder]);
+  }, [repositories, sortField, sortOrder, normalizedFilter]);
 
   // Handle repository preview (click to show README)
   const handleSelectRepository = (repo: GitHubRepository) => {
@@ -185,61 +226,184 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header with repository count and sort toggle */}
+      {/* Header with repository count, search toggle, and sort toggle */}
       <div
         style={{
+          position: 'relative',
           height: '40px',
           minHeight: '40px',
           padding: '0 16px',
           borderBottom: `1px solid ${theme.colors.border}`,
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
           boxSizing: 'border-box',
         }}
       >
-        <Github size={18} color={theme.colors.primary} />
-        <span
+        <div
           style={{
-            fontSize: `${theme.fontSizes[2]}px`,
-            fontWeight: theme.fontWeights.medium,
-            color: theme.colors.text,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            gap: '8px',
+            visibility: showSearch ? 'hidden' : 'visible',
           }}
         >
-          Repositories
-        </span>
-        {!isLoading && repositories.length > 0 && (
-          <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Github size={18} color={theme.colors.primary} />
             <span
               style={{
-                fontSize: `${theme.fontSizes[1]}px`,
-                color: theme.colors.textSecondary,
-                padding: '2px 8px',
-                borderRadius: '12px',
-                backgroundColor: theme.colors.backgroundSecondary,
+                fontSize: `${theme.fontSizes[2]}px`,
+                fontWeight: theme.fontWeights.medium,
+                color: theme.colors.text,
               }}
             >
-              {repositories.length}
+              Repositories
             </span>
+            {!isLoading && repositories.length > 0 && (
+              <span
+                style={{
+                  fontSize: `${theme.fontSizes[1]}px`,
+                  color: theme.colors.textSecondary,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  backgroundColor: theme.colors.backgroundSecondary,
+                }}
+              >
+                {repositories.length}
+              </span>
+            )}
+          </div>
+
+          {!isLoading && repositories.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Search toggle button */}
+              <button
+                onClick={handleToggleSearch}
+                style={{
+                  background: showSearch
+                    ? theme.colors.backgroundSecondary
+                    : 'none',
+                  border: `1px solid ${showSearch ? theme.colors.border : 'transparent'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: showSearch
+                    ? theme.colors.primary
+                    : theme.colors.textSecondary,
+                }}
+                title={showSearch ? 'Close search' : 'Search repositories'}
+              >
+                <Search size={16} />
+              </button>
+
+              {/* Sort toggle button */}
+              <button
+                onClick={toggleSort}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  border: `1px solid ${theme.colors.border}`,
+                  background: theme.colors.backgroundSecondary,
+                  color: theme.colors.text,
+                  fontSize: `${theme.fontSizes[1]}px`,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                {sortField === 'name' ? 'A-Z' : 'Recent'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Search overlay */}
+        {showSearch && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 16px',
+              backgroundColor: theme.colors.background,
+              zIndex: 10,
+            }}
+          >
+            <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+              <Search
+                size={16}
+                color={theme.colors.textSecondary}
+                style={{
+                  position: 'absolute',
+                  left: '10px',
+                  pointerEvents: 'none',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Filter repositories..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '6px 32px 6px 32px',
+                  fontSize: `${theme.fontSizes[1]}px`,
+                  color: theme.colors.text,
+                  backgroundColor: theme.colors.backgroundSecondary,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: '4px',
+                  outline: 'none',
+                  fontFamily: theme.fonts.body,
+                }}
+              />
+              {filter && (
+                <button
+                  onClick={handleClearFilter}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: theme.colors.textSecondary,
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
             <button
-              onClick={toggleSort}
+              onClick={handleToggleSearch}
               style={{
-                marginLeft: 'auto',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.colors.border}`,
-                background: theme.colors.backgroundSecondary,
-                color: theme.colors.text,
-                fontSize: `${theme.fontSizes[1]}px`,
+                background: 'none',
+                border: 'none',
                 cursor: 'pointer',
+                padding: '4px',
+                marginLeft: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                justifyContent: 'center',
+                color: theme.colors.textSecondary,
               }}
+              title="Close search"
             >
-              {sortField === 'name' ? 'A-Z' : 'Recent'}
+              <X size={16} />
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -329,15 +493,32 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
         </div>
       )}
 
+      {/* No filter results */}
+      {!isLoading && !error && filteredAndSortedRepos.length === 0 && repositories.length > 0 && (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '32px',
+            color: theme.colors.textSecondary,
+          }}
+        >
+          <p style={{ margin: 0 }}>No repositories match your filter.</p>
+        </div>
+      )}
+
       {/* Repository List */}
-      {!isLoading && !error && sortedRepos.length > 0 && (
+      {!isLoading && !error && filteredAndSortedRepos.length > 0 && (
         <div
           style={{
             flex: 1,
             overflowY: 'auto',
           }}
         >
-          {sortedRepos.map((repo) => (
+          {filteredAndSortedRepos.map((repo) => (
             <button
               key={repo.id}
               type="button"

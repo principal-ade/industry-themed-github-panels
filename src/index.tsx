@@ -137,7 +137,7 @@ export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
 export { GitHubIssuesPanel } from './panels/GitHubIssuesPanel';
 export { GitHubIssueDetailPanel } from './panels/GitHubIssueDetailPanel';
-export { OwnerRepositoriesPanel } from './panels/OwnerRepositoriesPanel';
+export { OwnerRepositoriesPanel, type OwnerRepositoriesPanelProps } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
 
