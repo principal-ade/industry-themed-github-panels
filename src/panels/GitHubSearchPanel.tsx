@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Search, Github, Star, GitFork, ExternalLink } from 'lucide-react';
+import { Search, Github, Star, GitFork, ExternalLink, X } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
 import type { GitHubRepository, RepositoryPreviewEventPayload } from '../types/github';
@@ -123,62 +123,81 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header */}
-      <div
+      {/* Header with Search */}
+      <form
+        onSubmit={handleSubmit}
         style={{
-          padding: '12px 16px',
+          height: '40px',
+          minHeight: '40px',
+          padding: '0 16px',
           borderBottom: `1px solid ${theme.colors.border}`,
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
+          boxSizing: 'border-box',
         }}
       >
-        <Github size={20} color={theme.colors.primary} />
-        <h2
-          style={{
-            margin: 0,
-            fontSize: `${theme.fontSizes[3]}px`,
-            fontWeight: theme.fontWeights.semibold,
-          }}
-        >
-          Search GitHub
-        </h2>
-      </div>
-
-      {/* Search Input */}
-      <form onSubmit={handleSubmit} style={{ padding: '12px 16px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            backgroundColor: theme.colors.backgroundSecondary,
-            border: `1px solid ${theme.colors.border}`,
-          }}
-        >
-          <Search size={18} color={theme.colors.textSecondary} />
+        <Github size={18} color={theme.colors.primary} style={{ flexShrink: 0 }} />
+        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+          <Search
+            size={16}
+            color={theme.colors.textSecondary}
+            style={{
+              position: 'absolute',
+              left: '10px',
+              pointerEvents: 'none',
+            }}
+          />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search repositories on GitHub..."
+            placeholder="Search GitHub repositories..."
             value={searchQuery}
             onChange={handleSearchChange}
             style={{
-              flex: 1,
-              border: 'none',
-              background: 'none',
-              outline: 'none',
-              fontSize: `${theme.fontSizes[2]}px`,
+              width: '100%',
+              padding: '6px 32px 6px 32px',
+              fontSize: `${theme.fontSizes[1]}px`,
               color: theme.colors.text,
+              backgroundColor: theme.colors.backgroundSecondary,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '4px',
+              outline: 'none',
+              fontFamily: theme.fonts.body,
             }}
           />
+          {searchQuery && !isLoading && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setResults([]);
+                setTotalCount(0);
+                inputRef.current?.focus();
+              }}
+              style={{
+                position: 'absolute',
+                right: '8px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.colors.textSecondary,
+              }}
+            >
+              <X size={16} />
+            </button>
+          )}
           {isLoading && (
             <div
               style={{
-                width: 16,
-                height: 16,
+                position: 'absolute',
+                right: '10px',
+                width: 14,
+                height: 14,
                 border: `2px solid ${theme.colors.border}`,
                 borderTopColor: theme.colors.primary,
                 borderRadius: '50%',
@@ -193,7 +212,7 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
       {totalCount > 0 && !isLoading && (
         <div
           style={{
-            padding: '0 16px 8px',
+            padding: '8px 16px',
             fontSize: `${theme.fontSizes[1]}px`,
             color: theme.colors.textSecondary,
           }}
