@@ -204,3 +204,55 @@ export interface IssueSelectedEventPayload {
   /** Repository name */
   repo: string;
 }
+
+// ============================================================================
+// Workspace/Collection Types (for addToCollection functionality)
+// ============================================================================
+
+/**
+ * Workspace type - matches alexandria-core-library Workspace
+ */
+export interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  theme?: string;
+  createdAt: number;
+  updatedAt: number;
+  isDefault?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Data slice for workspace collection
+ */
+export interface WorkspaceCollectionSlice {
+  /** The current workspace */
+  workspace: Workspace | null;
+  /** Loading state */
+  loading: boolean;
+  /** Error message if loading failed */
+  error?: string;
+}
+
+/**
+ * Data slice for workspace repositories
+ * Contains GitHub repository data for repos in the workspace
+ */
+export interface WorkspaceRepositoriesSlice {
+  /** Repositories in the workspace */
+  repositories: GitHubRepository[];
+  /** Loading state */
+  loading: boolean;
+  /** Error message if loading failed */
+  error?: string;
+}
+
+/**
+ * Actions for panels with addToCollection functionality
+ */
+export interface CollectionPanelActions {
+  /** Add a repository to the current collection/workspace */
+  addToCollection?: (repo: GitHubRepository) => Promise<void>;
+}

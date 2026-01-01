@@ -1,9 +1,18 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Search, Github, Star, GitFork, ExternalLink, X } from 'lucide-react';
+import { Search, Github, X } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
-import type { GitHubRepository, RepositoryPreviewEventPayload } from '../types/github';
+import type {
+  GitHubRepository,
+  RepositoryPreviewEventPayload,
+  WorkspaceCollectionSlice,
+  WorkspaceRepositoriesSlice,
+  CollectionPanelActions,
+} from '../types/github';
+import { GitHubRepositoryCard } from '../components/shared';
+
+const PANEL_ID = 'github-search-panel';
 
 /** Search result from GitHub API */
 interface GitHubSearchResult {
@@ -12,10 +21,18 @@ interface GitHubSearchResult {
   items: GitHubRepository[];
 }
 
+// Helper to create panel events with required fields
+const createPanelEvent = <T,>(type: string, payload: T) => ({
+  type,
+  source: PANEL_ID,
+  timestamp: Date.now(),
+  payload,
+});
+
 /**
  * GitHubSearchPanelContent - Internal component that uses theme
  */
-const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => {
+const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<GitHubRepository[]>([]);
@@ -25,6 +42,26 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get workspace/collection context for "Add to Collection" functionality
+  const workspaceSlice = context.getSlice<WorkspaceCollectionSlice>('workspace');
+  const workspaceReposSlice = context.getSlice<WorkspaceRepositoriesSlice>('workspaceRepositories');
+
+  // Collection context
+  const currentWorkspace = workspaceSlice?.data?.workspace;
+  const collectionName = currentWorkspace?.name;
+  const collectionRepos = useMemo(
+    () => workspaceReposSlice?.data?.repositories || [],
+    [workspaceReposSlice?.data?.repositories]
+  );
+
+  // Set of repo full_names already in the collection for quick lookup
+  const collectionRepoSet = useMemo(() => {
+    return new Set(collectionRepos.map((r) => r.full_name));
+  }, [collectionRepos]);
+
+  // Cast actions to include addToCollection
+  const panelActions = actions as CollectionPanelActions;
 
   // Focus input on mount
   useEffect(() => {
@@ -90,20 +127,35 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
     performSearch(searchQuery);
   };
 
-  // Handle repository preview (click to show README)
-  const handleSelectRepository = (repo: GitHubRepository) => {
+  // Handle repository selection (click to show README)
+  const handleSelectRepository = useCallback((repo: GitHubRepository) => {
     setSelectedRepoId(repo.id);
 
     events.emit<RepositoryPreviewEventPayload>({
       type: 'repository:preview',
-      source: 'github-search-panel',
+      source: PANEL_ID,
       timestamp: Date.now(),
       payload: {
         repository: repo,
         source: 'search',
       },
     });
-  };
+  }, [events]);
+
+  // Handle add to collection
+  const handleAddToCollection = useCallback(
+    async (repo: GitHubRepository) => {
+      if (panelActions.addToCollection) {
+        await panelActions.addToCollection(repo);
+        events.emit(
+          createPanelEvent(`${PANEL_ID}:repository-added-to-collection`, {
+            repository: repo,
+          })
+        );
+      }
+    },
+    [panelActions, events]
+  );
 
   // Format number with K/M suffix
   const formatNumber = (num: number): string => {
@@ -273,126 +325,15 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
         )}
 
         {results.map((repo) => (
-          <button
+          <GitHubRepositoryCard
             key={repo.id}
-            type="button"
-            onClick={() => handleSelectRepository(repo)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              margin: '4px 0',
-              borderRadius: '6px',
-              border: selectedRepoId === repo.id
-                ? `2px solid ${theme.colors.primary}`
-                : `1px solid ${theme.colors.border}`,
-              backgroundColor: selectedRepoId === repo.id
-                ? `${theme.colors.primary}10`
-                : theme.colors.surface,
-              cursor: 'pointer',
-              textAlign: 'left',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
-            {/* Repo name and owner */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {repo.owner?.avatar_url && (
-                <img
-                  src={repo.owner.avatar_url}
-                  alt={repo.owner.login}
-                  style={{ width: 20, height: 20, borderRadius: 4 }}
-                />
-              )}
-              <span
-                style={{
-                  fontSize: `${theme.fontSizes[2]}px`,
-                  fontWeight: theme.fontWeights.semibold,
-                  color: theme.colors.primary,
-                }}
-              >
-                {repo.full_name}
-              </span>
-              {repo.private && (
-                <span
-                  style={{
-                    fontSize: `${theme.fontSizes[0]}px`,
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: theme.colors.backgroundTertiary,
-                    color: theme.colors.textSecondary,
-                  }}
-                >
-                  Private
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            {repo.description && (
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: `${theme.fontSizes[1]}px`,
-                  color: theme.colors.textSecondary,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                }}
-              >
-                {repo.description}
-              </p>
-            )}
-
-            {/* Stats */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                fontSize: `${theme.fontSizes[1]}px`,
-                color: theme.colors.textSecondary,
-              }}
-            >
-              {repo.language && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      backgroundColor: theme.colors.info,
-                    }}
-                  />
-                  {repo.language}
-                </span>
-              )}
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Star size={14} />
-                {formatNumber(repo.stargazers_count || 0)}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <GitFork size={14} />
-                {formatNumber(repo.forks_count || 0)}
-              </span>
-              <a
-                href={repo.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  marginLeft: 'auto',
-                  color: theme.colors.textSecondary,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          </button>
+            repository={repo}
+            onSelect={handleSelectRepository}
+            isSelected={selectedRepoId === repo.id}
+            onAddToCollection={currentWorkspace ? handleAddToCollection : undefined}
+            isInCollection={collectionRepoSet.has(repo.full_name)}
+            collectionName={collectionName}
+          />
         ))}
       </div>
 
@@ -412,7 +353,8 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ events }) => 
  * Features:
  * - Real-time search with debouncing
  * - Shows stars, forks, language
- * - Emits repository:selected events when a repo is clicked
+ * - Emits repository:preview events when a repo is clicked
+ * - Supports "Add to Collection" when in a collection context
  */
 export const GitHubSearchPanel: React.FC<PanelComponentProps> = (props) => {
   return <GitHubSearchPanelContent {...props} />;
@@ -427,6 +369,6 @@ export const GitHubSearchPanelMetadata = {
   description: 'Search for repositories on GitHub',
   icon: 'search',
   version: '0.1.0',
-  slices: [],
+  slices: ['workspace', 'workspaceRepositories'],
   surfaces: ['panel'],
 };

@@ -52,4 +52,9 @@ export type {
   RepositorySelectedEventPayload,
   RepositoryPreviewEventPayload,
   GitHubPanelEventType,
+  // Workspace/Collection types
+  Workspace,
+  WorkspaceCollectionSlice,
+  WorkspaceRepositoriesSlice,
+  CollectionPanelActions,
 } from './github';
