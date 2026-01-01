@@ -57,4 +57,7 @@ export type {
   WorkspaceCollectionSlice,
   WorkspaceRepositoriesSlice,
   CollectionPanelActions,
+  // Search types
+  GitHubSearchResult,
+  GitHubSearchPanelActions,
 } from './github';

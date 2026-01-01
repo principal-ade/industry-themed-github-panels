@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Search, Github, X } from 'lucide-react';
+import { Search, Github, X, AlertCircle } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
 import type {
@@ -8,18 +8,11 @@ import type {
   RepositoryPreviewEventPayload,
   WorkspaceCollectionSlice,
   WorkspaceRepositoriesSlice,
-  CollectionPanelActions,
+  GitHubSearchPanelActions,
 } from '../types/github';
 import { GitHubRepositoryCard } from '../components/shared';
 
 const PANEL_ID = 'github-search-panel';
-
-/** Search result from GitHub API */
-interface GitHubSearchResult {
-  total_count: number;
-  incomplete_results: boolean;
-  items: GitHubRepository[];
-}
 
 // Helper to create panel events with required fields
 const createPanelEvent = <T,>(type: string, payload: T) => ({
@@ -60,15 +53,20 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
     return new Set(collectionRepos.map((r) => r.full_name));
   }, [collectionRepos]);
 
-  // Cast actions to include addToCollection
-  const panelActions = actions as CollectionPanelActions;
+  // Cast actions to panel-specific type
+  const panelActions = actions as GitHubSearchPanelActions;
+
+  // Check if search is available
+  const searchAvailable = Boolean(panelActions.searchRepositories);
 
   // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (searchAvailable) {
+      inputRef.current?.focus();
+    }
+  }, [searchAvailable]);
 
-  // Debounced search
+  // Debounced search using the action
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setResults([]);
@@ -77,20 +75,16 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
       return;
     }
 
+    if (!panelActions.searchRepositories) {
+      setError('Search is not available');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/github/search?q=${encodeURIComponent(query)}&per_page=30`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Search failed');
-      }
-
-      const data: GitHubSearchResult = await response.json();
+      const data = await panelActions.searchRepositories(query, { perPage: 30 });
       setResults(data.items || []);
       setTotalCount(data.total_count || 0);
     } catch (err) {
@@ -100,7 +94,7 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [panelActions]);
 
   // Handle search input change with debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +157,34 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
+
+  // Show message when search action is not provided
+  if (!searchAvailable) {
+    return (
+      <div
+        style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.colors.background,
+          color: theme.colors.textSecondary,
+          fontFamily: theme.fonts.body,
+          padding: '32px',
+          textAlign: 'center',
+        }}
+      >
+        <AlertCircle size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
+        <p style={{ margin: 0, fontSize: `${theme.fontSizes[2]}px` }}>
+          Search is not available
+        </p>
+        <p style={{ margin: '8px 0 0', fontSize: `${theme.fontSizes[1]}px` }}>
+          The host application must provide a searchRepositories action
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -355,6 +377,12 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
  * - Shows stars, forks, language
  * - Emits repository:preview events when a repo is clicked
  * - Supports "Add to Collection" when in a collection context
+ *
+ * Required actions:
+ * - searchRepositories: (query, options?) => Promise<GitHubSearchResult>
+ *
+ * Optional actions:
+ * - addToCollection: (repo) => Promise<void>
  */
 export const GitHubSearchPanel: React.FC<PanelComponentProps> = (props) => {
   return <GitHubSearchPanelContent {...props} />;

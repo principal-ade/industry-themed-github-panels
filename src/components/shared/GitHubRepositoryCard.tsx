@@ -278,7 +278,9 @@ export const GitHubRepositoryCard: React.FC<GitHubRepositoryCardProps> = ({
           {repository.license && (
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Scale size={12} />
-              {repository.license}
+              {typeof repository.license === 'string'
+                ? repository.license
+                : repository.license.spdx_id || repository.license.name}
             </span>
           )}
 

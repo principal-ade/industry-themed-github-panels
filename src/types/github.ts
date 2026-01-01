@@ -42,8 +42,14 @@ export interface GitHubRepository {
   archived?: boolean;
   disabled?: boolean;
   visibility?: 'public' | 'private' | 'internal';
-  /** License SPDX identifier (e.g., "MIT", "Apache-2.0") */
-  license?: string | null;
+  /** License information from GitHub API (can be string for backwards compat or full object) */
+  license?: string | {
+    key: string;
+    name: string;
+    spdx_id: string;
+    url: string;
+    node_id: string;
+  } | null;
 }
 
 /**
@@ -255,4 +261,26 @@ export interface WorkspaceRepositoriesSlice {
 export interface CollectionPanelActions {
   /** Add a repository to the current collection/workspace */
   addToCollection?: (repo: GitHubRepository) => Promise<void>;
+}
+
+/**
+ * Search result from GitHub API
+ */
+export interface GitHubSearchResult {
+  total_count: number;
+  incomplete_results: boolean;
+  items: GitHubRepository[];
+}
+
+/**
+ * Actions for GitHubSearchPanel
+ */
+export interface GitHubSearchPanelActions extends CollectionPanelActions {
+  /** Search GitHub repositories */
+  searchRepositories?: (query: string, options?: {
+    perPage?: number;
+    page?: number;
+    sort?: 'stars' | 'forks' | 'help-wanted-issues' | 'updated';
+    order?: 'asc' | 'desc';
+  }) => Promise<GitHubSearchResult>;
 }

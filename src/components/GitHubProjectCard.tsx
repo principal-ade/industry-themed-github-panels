@@ -232,7 +232,11 @@ export const GitHubProjectCard: React.FC<GitHubProjectCardProps> = ({
           {repository.license && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Scale size={12} />
-              <span>{repository.license}</span>
+              <span>
+                {typeof repository.license === 'string'
+                  ? repository.license
+                  : repository.license.spdx_id || repository.license.name}
+              </span>
             </div>
           )}
         </div>
