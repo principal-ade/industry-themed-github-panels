@@ -1,6 +1,6 @@
 {
   "name": "@industry-theme/github-panels",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "GitHub repository browser panel for panel-framework-core with industry theming",
   "type": "module",
   "main": "dist/panels.bundle.js",
