@@ -2,6 +2,7 @@ import { GitHubProjectsPanel, GitHubProjectsPanelMetadata } from './panels/GitHu
 import { GitHubSearchPanel, GitHubSearchPanelMetadata } from './panels/GitHubSearchPanel';
 import { GitHubIssuesPanel, GitHubIssuesPanelMetadata } from './panels/GitHubIssuesPanel';
 import { GitHubIssueDetailPanel, GitHubIssueDetailPanelMetadata } from './panels/GitHubIssueDetailPanel';
+import { GitHubMessagesPanel, GitHubMessagesPanelMetadata } from './panels/GitHubMessagesPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
 import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
@@ -111,6 +112,20 @@ export const panels: PanelDefinition[] = [
       console.log('Recent Repositories Panel unmounting');
     },
   },
+  {
+    metadata: GitHubMessagesPanelMetadata,
+    component: GitHubMessagesPanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Messages Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('GitHub Messages Panel unmounting');
+    },
+  },
 ];
 
 /**
@@ -137,6 +152,7 @@ export { GitHubProjectsPanel } from './panels/GitHubProjectsPanel';
 export { GitHubSearchPanel } from './panels/GitHubSearchPanel';
 export { GitHubIssuesPanel } from './panels/GitHubIssuesPanel';
 export { GitHubIssueDetailPanel } from './panels/GitHubIssueDetailPanel';
+export { GitHubMessagesPanel } from './panels/GitHubMessagesPanel';
 export { OwnerRepositoriesPanel, type OwnerRepositoriesPanelProps } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
@@ -155,6 +171,45 @@ export type {
   GitHubIssueUser,
   GitHubIssuesSliceData,
   IssueSelectedEventPayload,
+  // Pull Request types
+  GitHubPullRequest,
+  GitHubPullRequestRef,
+  PullRequestSelectedEventPayload,
+  // Comment and Review types
+  GitHubComment,
+  GitHubReview,
+  GitHubReviewComment,
+  GitHubReactions,
+  GitHubApp,
+  // Timeline types
+  GitHubTimelineEvent,
+  GitHubTimelineCommentEvent,
+  GitHubTimelineReviewEvent,
+  GitHubTimelineCommitEvent,
+  GitHubTimelineLabelEvent,
+  GitHubTimelineAssignEvent,
+  GitHubTimelineReviewRequestEvent,
+  GitHubTimelineMergeEvent,
+  GitHubTimelineStateEvent,
+  GitHubTimelineRefEvent,
+  GitHubTimelineDeployEvent,
+  GitHubTimelineRenameEvent,
+  GitHubTimelineMilestoneEvent,
+  GitHubTimelineCrossReferenceEvent,
+  GitHubCommitAuthor,
+  GitHubCommitVerification,
+  // Messages panel types
+  GitHubMessagesTarget,
+  GitHubMessagesSliceData,
+  MessagesRequestEventPayload,
+} from './types/github';
+
+// Export helper functions
+export {
+  getTimelineEventType,
+  isCommentEvent,
+  isReviewEvent,
+  isCommitEvent,
 } from './types/github';
 
 // Export tools
@@ -169,4 +224,7 @@ export {
   requestGitHubLoginTool,
   listIssuesTool,
   refreshIssuesTool,
+  viewIssueMessagesTool,
+  viewPullRequestMessagesTool,
+  refreshMessagesTool,
 } from './tools';

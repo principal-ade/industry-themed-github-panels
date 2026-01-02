@@ -233,6 +233,110 @@ export const refreshIssuesTool: PanelTool = {
 };
 
 /**
+ * Tool: View Issue Messages
+ *
+ * View the conversation/messages for a GitHub issue.
+ */
+export const viewIssueMessagesTool: PanelTool = {
+  name: 'view_issue_messages',
+  description: 'View the conversation thread (comments, timeline events) for a GitHub issue.',
+  inputs: {
+    type: 'object',
+    properties: {
+      owner: {
+        type: 'string',
+        description: 'The repository owner (user or organization)',
+      },
+      repo: {
+        type: 'string',
+        description: 'The repository name',
+      },
+      number: {
+        type: 'number',
+        description: 'The issue number',
+      },
+    },
+    required: ['owner', 'repo', 'number'],
+  },
+  outputs: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+    },
+  },
+  tags: ['github', 'issues', 'messages', 'comments', 'conversation'],
+  tool_call_template: {
+    call_template_type: 'panel_event',
+    event_type: 'github-messages:request',
+  },
+};
+
+/**
+ * Tool: View Pull Request Messages
+ *
+ * View the conversation/messages for a GitHub pull request.
+ */
+export const viewPullRequestMessagesTool: PanelTool = {
+  name: 'view_pull_request_messages',
+  description: 'View the conversation thread (comments, reviews, commits, timeline events) for a GitHub pull request.',
+  inputs: {
+    type: 'object',
+    properties: {
+      owner: {
+        type: 'string',
+        description: 'The repository owner (user or organization)',
+      },
+      repo: {
+        type: 'string',
+        description: 'The repository name',
+      },
+      number: {
+        type: 'number',
+        description: 'The pull request number',
+      },
+    },
+    required: ['owner', 'repo', 'number'],
+  },
+  outputs: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+    },
+  },
+  tags: ['github', 'pull-request', 'pr', 'messages', 'comments', 'reviews', 'conversation'],
+  tool_call_template: {
+    call_template_type: 'panel_event',
+    event_type: 'github-messages:request',
+  },
+};
+
+/**
+ * Tool: Refresh Messages
+ *
+ * Refresh the messages/timeline for the current issue or pull request.
+ */
+export const refreshMessagesTool: PanelTool = {
+  name: 'refresh_messages',
+  description: 'Refresh the conversation thread for the currently viewed issue or pull request.',
+  inputs: {
+    type: 'object',
+    properties: {},
+    required: [],
+  },
+  outputs: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+    },
+  },
+  tags: ['github', 'messages', 'refresh', 'update'],
+  tool_call_template: {
+    call_template_type: 'panel_event',
+    event_type: 'github-messages:refresh',
+  },
+};
+
+/**
  * All GitHub tools exported as an array.
  */
 export const githubTools: PanelTool[] = [
@@ -244,6 +348,9 @@ export const githubTools: PanelTool[] = [
   requestGitHubLoginTool,
   listIssuesTool,
   refreshIssuesTool,
+  viewIssueMessagesTool,
+  viewPullRequestMessagesTool,
+  refreshMessagesTool,
 ];
 
 /**
