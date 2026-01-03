@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import {
   Github,
   AlertCircle,
-  Tag,
   MessageSquare,
   Loader2,
   RefreshCw,
   LogIn,
+  ChevronDown,
+  Tag,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -57,6 +58,26 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
   const isAuthenticated = issuesSlice?.data?.isAuthenticated ?? false;
   const sliceError = issuesSlice?.data?.error;
 
+  // State for label filter
+  const [selectedLabel, setSelectedLabel] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // State for selected issue
+  const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
+
+  // Extract unique labels from all issues
+  const uniqueLabels = useMemo(() => {
+    const labelMap = new Map<string, { name: string; color: string }>();
+    issues.forEach((issue) => {
+      issue.labels.forEach((label) => {
+        if (!labelMap.has(label.name)) {
+          labelMap.set(label.name, { name: label.name, color: label.color });
+        }
+      });
+    });
+    return Array.from(labelMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [issues]);
+
   // Request issues data on mount
   useEffect(() => {
     events.emit({
@@ -67,12 +88,17 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
     });
   }, [events]);
 
-  // Filter to only show open issues
+  // Filter to only show open issues, optionally filtered by label
   const openIssues = useMemo(() => {
-    return issues.filter((issue) => issue.state === 'open');
-  }, [issues]);
+    return issues.filter((issue) => {
+      if (issue.state !== 'open') return false;
+      if (selectedLabel && !issue.labels.some((l) => l.name === selectedLabel)) return false;
+      return true;
+    });
+  }, [issues, selectedLabel]);
 
   const handleIssueClick = (issue: GitHubIssue) => {
+    setSelectedIssueId(issue.id);
     // Emit issue selected event for detail panel
     events.emit<IssueSelectedEventPayload>({
       type: 'issue:selected',
@@ -288,23 +314,132 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
             Open Issues
           </span>
 
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              padding: '4px',
-              color: theme.colors.textSecondary,
-              opacity: isLoading ? 0.5 : 1,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Label filter dropdown */}
+            {uniqueLabels.length > 0 && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    border: `1px solid ${theme.colors.border}`,
+                    backgroundColor: theme.colors.surface,
+                    color: selectedLabel ? theme.colors.text : theme.colors.textSecondary,
+                    fontSize: `${theme.fontSizes[0]}px`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Tag size={10} />
+                  <span style={{ maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {selectedLabel || 'All'}
+                  </span>
+                  <ChevronDown
+                    size={10}
+                    style={{
+                      transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                    }}
+                  />
+                </button>
+
+                {isDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '4px',
+                      minWidth: '150px',
+                      backgroundColor: theme.colors.surface,
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      zIndex: 10,
+                      maxHeight: '200px',
+                      overflow: 'auto',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedLabel('');
+                        setIsDropdownOpen(false);
+                      }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '8px 10px',
+                        border: 'none',
+                        backgroundColor: selectedLabel === '' ? theme.colors.backgroundLight : 'transparent',
+                        color: theme.colors.text,
+                        fontSize: `${theme.fontSizes[1]}px`,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      All labels
+                    </button>
+                    {uniqueLabels.map((label) => (
+                      <button
+                        key={label.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLabel(label.name);
+                          setIsDropdownOpen(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          width: '100%',
+                          padding: '8px 10px',
+                          border: 'none',
+                          backgroundColor: selectedLabel === label.name ? theme.colors.backgroundLight : 'transparent',
+                          color: theme.colors.text,
+                          fontSize: `${theme.fontSizes[1]}px`,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            backgroundColor: `#${label.color}`,
+                          }}
+                        />
+                        {label.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                padding: '4px',
+                color: theme.colors.textSecondary,
+                opacity: isLoading ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -342,7 +477,9 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
           <div
             style={{ display: 'flex', flexDirection: 'column' }}
           >
-            {openIssues.map((issue) => (
+            {openIssues.map((issue) => {
+              const isSelected = selectedIssueId === issue.id;
+              return (
               <button
                 key={issue.id}
                 type="button"
@@ -353,55 +490,13 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
                   borderRadius: 0,
                   border: 'none',
                   borderBottom: `1px solid ${theme.colors.border}`,
-                  backgroundColor: theme.colors.surface,
+                  backgroundColor: isSelected ? theme.colors.backgroundSecondary : theme.colors.surface,
                   cursor: 'pointer',
                   textAlign: 'left',
+                  transition: 'background-color 0.15s ease',
                 }}
               >
                 <div style={{ minWidth: 0 }}>
-                    {/* Labels */}
-                    {issue.labels.length > 0 && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '6px',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      {issue.labels.slice(0, 3).map((label) => (
-                        <span
-                          key={label.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '2px 6px',
-                            borderRadius: '12px',
-                            backgroundColor: `#${label.color}22`,
-                            color: `#${label.color}`,
-                            fontSize: `${theme.fontSizes[0]}px`,
-                            fontWeight: theme.fontWeights.medium,
-                          }}
-                        >
-                          <Tag size={10} />
-                          {label.name}
-                        </span>
-                      ))}
-                      {issue.labels.length > 3 && (
-                        <span
-                          style={{
-                            fontSize: `${theme.fontSizes[0]}px`,
-                            color: theme.colors.textSecondary,
-                          }}
-                        >
-                          +{issue.labels.length - 3}
-                        </span>
-                      )}
-                    </div>
-                    )}
-
                     {/* Issue title */}
                     <h4
                       style={{
@@ -457,7 +552,8 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
                     </div>
                 </div>
               </button>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
