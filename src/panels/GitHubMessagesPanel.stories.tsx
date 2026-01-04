@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { GitHubMessagesPanel } from './GitHubMessagesPanel';
 import {
@@ -6,6 +5,7 @@ import {
   createMockActions,
   createMockEvents,
 } from '../mocks/panelContext';
+import type { DataSlice } from '../types';
 import type {
   GitHubMessagesSliceData,
   GitHubTimelineCommentEvent,
@@ -416,27 +416,43 @@ const mockClosedIssueData: GitHubMessagesSliceData = {
   ],
 };
 
-// Wrapper component that sends messages data on mount
-const MessagesWithData: React.FC<{
-  data: GitHubMessagesSliceData;
-  context: ReturnType<typeof createMockContext>;
-  actions: ReturnType<typeof createMockActions>;
-  events: ReturnType<typeof createMockEvents>;
-}> = ({ data, context, actions, events }) => {
-  useEffect(() => {
-    // Emit messages data event after a short delay
-    const timer = setTimeout(() => {
-      events.emit({
-        type: 'github-messages:data',
-        source: 'storybook',
-        timestamp: Date.now(),
-        payload: data,
-      });
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [data, events]);
+/**
+ * Helper to create context with GitHub messages slice
+ */
+const createMessagesContext = (
+  messagesData: GitHubMessagesSliceData,
+  options: {
+    loading?: boolean;
+  } = {}
+) => {
+  const { loading = false } = options;
 
-  return <GitHubMessagesPanel context={context} actions={actions} events={events} />;
+  const messagesSlice: DataSlice<GitHubMessagesSliceData> = {
+    scope: 'repository',
+    name: 'github-messages',
+    data: messagesData,
+    loading,
+    error: messagesData.error ? new Error(messagesData.error) : null,
+    refresh: async () => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Refreshing GitHub messages...');
+    },
+  };
+
+  const slices = new Map<string, DataSlice>();
+  slices.set('github-messages', messagesSlice as DataSlice);
+
+  return createMockContext({
+    slices,
+    getSlice: <T,>(name: string) => {
+      if (name === 'github-messages') {
+        return messagesSlice as unknown as DataSlice<T>;
+      }
+      return undefined;
+    },
+    hasSlice: (name: string) => name === 'github-messages',
+    isSliceLoading: (name: string) => name === 'github-messages' && loading,
+  });
 };
 
 /**
@@ -486,18 +502,20 @@ A panel for viewing GitHub issue and PR conversation threads.
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const defaultMocks = {
-  context: createMockContext(),
-  actions: createMockActions(),
-  events: createMockEvents(),
-};
-
 /**
  * Empty state - no issue/PR selected
  */
 export const EmptyState: Story = {
   args: {
-    context: createMockContext(),
+    context: createMessagesContext({
+      target: null,
+      timeline: [],
+      reviewComments: [],
+      owner: '',
+      repo: '',
+      loading: false,
+      isAuthenticated: true,
+    }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
@@ -507,122 +525,97 @@ export const EmptyState: Story = {
  * Pull request conversation with comments, reviews, and commits
  */
 export const PullRequestConversation: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockPRMessagesData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockPRMessagesData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Merged pull request
  */
 export const MergedPullRequest: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockMergedPRData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockMergedPRData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Draft pull request
  */
 export const DraftPullRequest: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={{
-        ...mockPRMessagesData,
-        target: {
-          ...mockPRMessagesData.target!,
-          draft: true,
-        },
-      }}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext({
+      ...mockPRMessagesData,
+      target: {
+        ...mockPRMessagesData.target!,
+        draft: true,
+      },
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Issue conversation
  */
 export const IssueConversation: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockIssueMessagesData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockIssueMessagesData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Closed issue
  */
 export const ClosedIssue: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockClosedIssueData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockClosedIssueData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Empty conversation (no activity yet)
  */
 export const EmptyConversation: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={{
-        target: {
-          type: 'issue',
-          number: 1,
-          title: 'New issue with no comments',
-          state: 'open',
-          user: mockUsers.alice,
-          created_at: new Date().toISOString(),
-          html_url: 'https://github.com/acme/web-app/issues/1',
-        },
-        timeline: [],
-        reviewComments: [],
-        owner: 'acme',
-        repo: 'web-app',
-        loading: false,
-        isAuthenticated: true,
-      }}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext({
+      target: {
+        type: 'issue',
+        number: 1,
+        title: 'New issue with no comments',
+        state: 'open',
+        user: mockUsers.alice,
+        created_at: new Date().toISOString(),
+        html_url: 'https://github.com/acme/web-app/issues/1',
+      },
+      timeline: [],
+      reviewComments: [],
+      owner: 'acme',
+      repo: 'web-app',
+      loading: false,
+      isAuthenticated: true,
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Loading state
  */
 export const Loading: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={{
+  args: {
+    context: createMessagesContext(
+      {
         target: {
           type: 'pull_request',
           number: 42,
@@ -638,59 +631,51 @@ export const Loading: Story = {
         repo: 'web-app',
         loading: true,
         isAuthenticated: true,
-      }}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+      },
+      { loading: true }
+    ),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Error state
  */
 export const ErrorState: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={{
-        target: {
-          type: 'pull_request',
-          number: 42,
-          title: 'Failed to load',
-          state: 'open',
-          user: mockUsers.alice,
-          created_at: new Date().toISOString(),
-          html_url: 'https://github.com/acme/web-app/pull/42',
-        },
-        timeline: [],
-        reviewComments: [],
-        owner: 'acme',
-        repo: 'web-app',
-        loading: false,
-        isAuthenticated: true,
-        error: 'Failed to load conversation. Please try again.',
-      }}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext({
+      target: {
+        type: 'pull_request',
+        number: 42,
+        title: 'Failed to load',
+        state: 'open',
+        user: mockUsers.alice,
+        created_at: new Date().toISOString(),
+        html_url: 'https://github.com/acme/web-app/pull/42',
+      },
+      timeline: [],
+      reviewComments: [],
+      owner: 'acme',
+      repo: 'web-app',
+      loading: false,
+      isAuthenticated: true,
+      error: 'Failed to load conversation. Please try again.',
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
 };
 
 /**
  * Compact layout (narrow panel)
  */
 export const CompactLayout: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockPRMessagesData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockPRMessagesData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
   decorators: [
     (Story) => (
       <div style={{ height: '100vh', width: '400px', background: '#1a1a1a' }}>
@@ -704,15 +689,11 @@ export const CompactLayout: Story = {
  * Wide layout
  */
 export const WideLayout: Story = {
-  args: defaultMocks,
-  render: (args) => (
-    <MessagesWithData
-      data={mockPRMessagesData}
-      context={args.context}
-      actions={args.actions}
-      events={args.events}
-    />
-  ),
+  args: {
+    context: createMessagesContext(mockPRMessagesData),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
   decorators: [
     (Story) => (
       <div style={{ height: '100vh', width: '900px', background: '#1a1a1a' }}>

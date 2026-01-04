@@ -3,7 +3,6 @@ import {
   MessageSquare,
   GitCommit,
   GitMerge,
-  GitPullRequest,
   CircleDot,
   Check,
   X,
@@ -156,7 +155,7 @@ const ReactionsDisplay: React.FC<{ reactions: GitHubReactions }> = ({ reactions 
           }}
         >
           <span>{emoji}</span>
-          <span style={{ color: theme.colors.textSecondary }}>{count}</span>
+          <span style={{ fontFamily: theme.fonts.body, color: theme.colors.textSecondary }}>{count}</span>
         </span>
       ))}
     </div>
@@ -201,6 +200,7 @@ const CommentEvent: React.FC<{ event: GitHubTimelineCommentEvent }> = ({ event }
           </span>
           <span
             style={{
+              fontFamily: theme.fonts.body,
               color: theme.colors.textMuted,
               fontSize: theme.fontSizes[0],
             }}
@@ -214,6 +214,7 @@ const CommentEvent: React.FC<{ event: GitHubTimelineCommentEvent }> = ({ event }
                 borderRadius: '4px',
                 backgroundColor: theme.colors.backgroundSecondary,
                 border: `1px solid ${theme.colors.border}`,
+                fontFamily: theme.fonts.body,
                 fontSize: theme.fontSizes[0],
                 color: theme.colors.textSecondary,
                 textTransform: 'uppercase',
@@ -307,6 +308,7 @@ const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) 
           </span>
           <span
             style={{
+              fontFamily: theme.fonts.body,
               color: config.color,
               fontWeight: 500,
               fontSize: theme.fontSizes[1],
@@ -316,6 +318,7 @@ const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) 
           </span>
           <span
             style={{
+              fontFamily: theme.fonts.body,
               color: theme.colors.textMuted,
               fontSize: theme.fontSizes[0],
             }}
@@ -443,6 +446,7 @@ const CommitEvent: React.FC<{ event: GitHubTimelineCommitEvent }> = ({ event }) 
         <div
           style={{
             marginTop: '4px',
+            fontFamily: theme.fonts.body,
             fontSize: theme.fontSizes[0],
             color: theme.colors.textMuted,
           }}
@@ -452,6 +456,7 @@ const CommitEvent: React.FC<{ event: GitHubTimelineCommitEvent }> = ({ event }) 
             <span
               style={{
                 marginLeft: '8px',
+                fontFamily: theme.fonts.body,
                 color: theme.colors.success || '#22c55e',
               }}
             >
@@ -483,6 +488,7 @@ const SimpleEvent: React.FC<{
         gap: '12px',
         padding: '8px 16px',
         borderBottom: `1px solid ${theme.colors.border}`,
+        fontFamily: theme.fonts.body,
         fontSize: theme.fontSizes[0],
         color: theme.colors.textSecondary,
       }}
@@ -497,9 +503,9 @@ const SimpleEvent: React.FC<{
         {icon}
       </div>
       <Avatar user={actor} size={20} />
-      <span style={{ fontWeight: 500, color: theme.colors.text }}>{actor.login}</span>
+      <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, color: theme.colors.text }}>{actor.login}</span>
       {action}
-      <span style={{ color: theme.colors.textMuted, marginLeft: 'auto' }}>
+      <span style={{ fontFamily: theme.fonts.body, color: theme.colors.textMuted, marginLeft: 'auto' }}>
         {formatDate(timestamp)}
       </span>
     </div>
@@ -519,13 +525,14 @@ const LabelEvent: React.FC<{ event: GitHubTimelineLabelEvent }> = ({ event }) =>
       actor={event.actor}
       action={
         <>
-          <span>{isLabeled ? 'added' : 'removed'}</span>
+          <span style={{ fontFamily: theme.fonts.body }}>{isLabeled ? 'added' : 'removed'}</span>
           <span
             style={{
               padding: '2px 8px',
               borderRadius: '12px',
               backgroundColor: `#${event.label.color}`,
               color: parseInt(event.label.color, 16) > 0x7fffff ? '#000' : '#fff',
+              fontFamily: theme.fonts.body,
               fontSize: '11px',
               fontWeight: 500,
             }}
@@ -558,8 +565,8 @@ const AssignEvent: React.FC<{ event: GitHubTimelineAssignEvent }> = ({ event }) 
       actor={event.actor}
       action={
         <>
-          <span>{isAssigned ? 'assigned' : 'unassigned'}</span>
-          <span style={{ fontWeight: 500, color: theme.colors.text }}>
+          <span style={{ fontFamily: theme.fonts.body }}>{isAssigned ? 'assigned' : 'unassigned'}</span>
+          <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, color: theme.colors.text }}>
             {event.assignee.login}
           </span>
         </>
@@ -583,8 +590,8 @@ const ReviewRequestEvent: React.FC<{ event: GitHubTimelineReviewRequestEvent }> 
       actor={event.review_requester}
       action={
         <>
-          <span>{isRequested ? 'requested review from' : 'removed review request from'}</span>
-          <span style={{ fontWeight: 500, color: theme.colors.text }}>{reviewer}</span>
+          <span style={{ fontFamily: theme.fonts.body }}>{isRequested ? 'requested review from' : 'removed review request from'}</span>
+          <span style={{ fontFamily: theme.fonts.body, fontWeight: 500, color: theme.colors.text }}>{reviewer}</span>
         </>
       }
       timestamp={event.created_at}
@@ -604,10 +611,10 @@ const MergeEvent: React.FC<{ event: GitHubTimelineMergeEvent }> = ({ event }) =>
       actor={event.actor}
       action={
         <>
-          <span style={{ color: theme.colors.success || '#22c55e', fontWeight: 500 }}>
+          <span style={{ fontFamily: theme.fonts.body, color: theme.colors.success || '#22c55e', fontWeight: 500 }}>
             merged
           </span>
-          <span>commit</span>
+          <span style={{ fontFamily: theme.fonts.body }}>commit</span>
           <code
             style={{
               padding: '2px 6px',
@@ -646,6 +653,7 @@ const StateEvent: React.FC<{ event: GitHubTimelineStateEvent }> = ({ event }) =>
       action={
         <span
           style={{
+            fontFamily: theme.fonts.body,
             color: isClosed
               ? theme.colors.error || '#ef4444'
               : theme.colors.success || '#22c55e',
@@ -676,7 +684,7 @@ const RefEvent: React.FC<{ event: GitHubTimelineRefEvent }> = ({ event }) => {
     <SimpleEvent
       icon={<Rocket size={14} style={{ color: theme.colors.textMuted }} />}
       actor={event.actor}
-      action={<span>{labels[event.event] || event.event}</span>}
+      action={<span style={{ fontFamily: theme.fonts.body }}>{labels[event.event] || event.event}</span>}
       timestamp={event.created_at}
     />
   );
@@ -710,6 +718,7 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
         >
           <span
             style={{
+              fontFamily: theme.fonts.body,
               fontWeight: 600,
               color: theme.colors.text,
               fontSize: theme.fontSizes[0],
@@ -719,6 +728,7 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
           </span>
           <span
             style={{
+              fontFamily: theme.fonts.body,
               color: theme.colors.textMuted,
               fontSize: theme.fontSizes[0],
             }}
@@ -738,7 +748,7 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
             {comment.path}
           </code>
           {comment.line && (
-            <span style={{ fontSize: theme.fontSizes[0], color: theme.colors.textSecondary }}>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: theme.fontSizes[0], color: theme.colors.textSecondary }}>
               line {comment.line}
             </span>
           )}
@@ -901,6 +911,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            fontFamily: theme.fonts.body,
             color: theme.colors.textSecondary,
           }}
         >
@@ -969,6 +980,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
+            fontFamily: theme.fonts.body,
             color: theme.colors.error || '#ef4444',
           }}
         >
@@ -980,32 +992,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   }
 
   const { target, timeline, reviewComments } = messagesData;
-  const isPR = target.type === 'pull_request';
-
-  // Determine status color and icon
-  const getStatusConfig = () => {
-    if (isPR && target.merged) {
-      return {
-        icon: <GitMerge size={14} />,
-        color: '#a855f7', // purple for merged
-        label: 'Merged',
-      };
-    }
-    if (target.state === 'open') {
-      return {
-        icon: isPR ? <GitPullRequest size={14} /> : <CircleDot size={14} />,
-        color: theme.colors.success || '#22c55e',
-        label: target.draft ? 'Draft' : 'Open',
-      };
-    }
-    return {
-      icon: <CircleDot size={14} />,
-      color: theme.colors.error || '#ef4444',
-      label: 'Closed',
-    };
-  };
-
-  const statusConfig = getStatusConfig();
 
   return (
     <div ref={panelRef} tabIndex={-1} style={containerStyle}>
@@ -1023,40 +1009,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
           boxSizing: 'border-box',
         }}
       >
-        {/* Type and number */}
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontFamily: theme.fonts.monospace,
-            fontSize: theme.fontSizes[0],
-            color: theme.colors.textSecondary,
-          }}
-        >
-          {isPR ? <GitPullRequest size={14} /> : <CircleDot size={14} />}
-          #{target.number}
-        </span>
-
-        {/* Status badge */}
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            borderRadius: '999px',
-            backgroundColor: `${statusConfig.color}20`,
-            color: statusConfig.color,
-            fontFamily: theme.fonts.heading,
-            fontSize: theme.fontSizes[0],
-            fontWeight: 600,
-          }}
-        >
-          {statusConfig.icon}
-          {statusConfig.label}
-        </span>
-
         {/* Title (truncated) */}
         <span
           style={{
@@ -1064,25 +1016,12 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            fontFamily: theme.fonts.heading,
             color: theme.colors.text,
             fontSize: theme.fontSizes[1],
           }}
         >
           {target.title}
-        </span>
-
-        {/* Message count */}
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            color: theme.colors.textSecondary,
-            fontSize: theme.fontSizes[0],
-          }}
-        >
-          <MessageSquare size={12} />
-          {timeline.filter((e: GitHubTimelineEvent) => e.event === 'commented' || e.event === 'reviewed').length}
         </span>
 
         {/* External link */}
@@ -1140,6 +1079,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
                     padding: '12px 16px',
                     backgroundColor: theme.colors.backgroundSecondary,
                     borderBottom: `1px solid ${theme.colors.border}`,
+                    fontFamily: theme.fonts.heading,
                     fontWeight: 600,
                     fontSize: theme.fontSizes[0],
                     color: theme.colors.textSecondary,
