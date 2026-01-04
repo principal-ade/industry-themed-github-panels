@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   MessageSquare,
   GitCommit,
@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type {
@@ -821,6 +822,16 @@ const TimelineEventRenderer: React.FC<{ event: GitHubTimelineEvent }> = ({ event
 const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, events }) => {
   const { theme } = useTheme();
 
+  // Panel container ref for focus management
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Listen for panel focus events
+  usePanelFocusListener(
+    'github-messages',
+    events,
+    () => panelRef.current?.focus()
+  );
+
   // Get messages data from slice - reads directly, no events for data updates
   const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
   const isLoading = context.isSliceLoading('github-messages');
@@ -877,12 +888,13 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
     height: '100%',
     backgroundColor: theme.colors.background,
     overflow: 'hidden',
+    outline: 'none',
   };
 
   // Loading state
   if (isLoading && !hasData) {
     return (
-      <div style={containerStyle}>
+      <div ref={panelRef} tabIndex={-1} style={containerStyle}>
         <div
           style={{
             flex: 1,
@@ -901,7 +913,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   // Empty state
   if (!messagesData || !messagesData.target) {
     return (
-      <div style={containerStyle}>
+      <div ref={panelRef} tabIndex={-1} style={containerStyle}>
         <div
           style={{
             flex: 1,
@@ -948,7 +960,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   // Error state
   if (messagesData.error) {
     return (
-      <div style={containerStyle}>
+      <div ref={panelRef} tabIndex={-1} style={containerStyle}>
         <div
           style={{
             flex: 1,
@@ -996,7 +1008,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   const statusConfig = getStatusConfig();
 
   return (
-    <div style={containerStyle}>
+    <div ref={panelRef} tabIndex={-1} style={containerStyle}>
       {/* Header */}
       <div
         style={{
