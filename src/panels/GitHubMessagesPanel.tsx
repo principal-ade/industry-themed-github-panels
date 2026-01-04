@@ -820,32 +820,13 @@ const TimelineEventRenderer: React.FC<{ event: GitHubTimelineEvent }> = ({ event
  */
 const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, events }) => {
   const { theme } = useTheme();
-  const [messagesData, setMessagesData] = useState<GitHubMessagesSliceData | null>(null);
 
-  // Get messages data from slice
-  useEffect(() => {
-    if (!context) return;
+  // Get messages data from slice - reads directly, no events for data updates
+  const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
+  const isLoading = context.isSliceLoading('github-messages');
+  const hasData = context.hasSlice('github-messages');
 
-    const sliceData = context.getSlice?.('github-messages') as GitHubMessagesSliceData | undefined;
-    if (sliceData) {
-      setMessagesData(sliceData);
-    }
-  }, [context]);
-
-  // Listen for messages data updates
-  useEffect(() => {
-    if (!events) return;
-
-    const handleMessagesData = (event: { payload: GitHubMessagesSliceData }) => {
-      setMessagesData(event.payload);
-    };
-
-    const unsubData = (events as PanelEventEmitter).on('github-messages:data', handleMessagesData);
-
-    return () => {
-      if (typeof unsubData === 'function') unsubData();
-    };
-  }, [events]);
+  const messagesData = messagesSlice?.data;
 
   // Listen for issue:selected or pr:selected events to request messages
   useEffect(() => {
@@ -898,6 +879,25 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
     overflow: 'hidden',
   };
 
+  // Loading state
+  if (isLoading && !hasData) {
+    return (
+      <div style={containerStyle}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: theme.colors.textSecondary,
+          }}
+        >
+          Loading conversation...
+        </div>
+      </div>
+    );
+  }
+
   // Empty state
   if (!messagesData || !messagesData.target) {
     return (
@@ -940,25 +940,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
               Select an issue or pull request to view its conversation thread.
             </p>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (messagesData.loading) {
-    return (
-      <div style={containerStyle}>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: theme.colors.textSecondary,
-          }}
-        >
-          Loading conversation...
         </div>
       </div>
     );
@@ -1089,7 +1070,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
           }}
         >
           <MessageSquare size={12} />
-          {timeline.filter((e) => e.event === 'commented' || e.event === 'reviewed').length}
+          {timeline.filter((e: GitHubTimelineEvent) => e.event === 'commented' || e.event === 'reviewed').length}
         </span>
 
         {/* External link */}
@@ -1137,7 +1118,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
           </div>
         ) : (
           <>
-            {timeline.map((event, index) => (
+            {timeline.map((event: GitHubTimelineEvent, index: number) => (
               <TimelineEventRenderer key={`${event.event}-${index}`} event={event} />
             ))}
             {reviewComments.length > 0 && (
@@ -1155,7 +1136,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
                 >
                   Inline Review Comments ({reviewComments.length})
                 </div>
-                {reviewComments.map((comment) => (
+                {reviewComments.map((comment: GitHubReviewComment) => (
                   <InlineReviewComment key={comment.id} comment={comment} />
                 ))}
               </>
