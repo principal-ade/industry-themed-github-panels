@@ -789,3 +789,34 @@ export interface PullRequestSelectedEventPayload {
   /** Repository name */
   repo: string;
 }
+
+/**
+ * Payload for comment:create event
+ * Emitted when user creates a new comment
+ */
+export interface CommentCreateEventPayload {
+  owner: string;
+  repo: string;
+  targetType: 'issue' | 'pull_request';
+  targetNumber: number;
+  body: string;
+}
+
+/**
+ * Payload for comment:created success event
+ * Received when comment is successfully created
+ */
+export interface CommentCreatedEventPayload {
+  targetNumber: number;
+  commentId: number;
+  comment: GitHubComment;
+}
+
+/**
+ * Payload for comment:error event
+ * Received when comment creation fails
+ */
+export interface CommentErrorEventPayload {
+  targetNumber: number;
+  error: string;
+}

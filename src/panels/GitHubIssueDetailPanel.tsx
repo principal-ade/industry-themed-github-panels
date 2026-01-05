@@ -7,6 +7,7 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
@@ -56,6 +57,7 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
   const [modalStep, setModalStep] = useState<'type' | 'instructions'>('type');
   const [selectedTaskType, setSelectedTaskType] = useState<'investigate' | 'fix' | null>(null);
   const [additionalInstructions, setAdditionalInstructions] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Listen for panel focus events
@@ -181,6 +183,25 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
         payload: {},
       });
     }
+  };
+
+  // Handle delete action
+  const handleDelete = () => {
+    if (selectedIssue && events) {
+      // Emit delete event
+      (events as PanelEventEmitter).emit({
+        type: 'github-issue:delete',
+        source: 'github-issue-detail-panel',
+        timestamp: Date.now(),
+        payload: {
+          owner,
+          repo,
+          number: selectedIssue.number,
+        },
+      });
+    }
+
+    setShowDeleteConfirm(false);
   };
 
   const containerStyle: React.CSSProperties = {
@@ -311,6 +332,28 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
 
         {/* Spacer */}
         <div style={{ flex: 1 }} />
+
+        {/* Delete button */}
+        <button
+          type="button"
+          onClick={() => setShowDeleteConfirm(true)}
+          title="Delete issue"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            padding: 0,
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: '6px',
+            backgroundColor: theme.colors.background,
+            color: theme.colors.textSecondary,
+            cursor: 'pointer',
+          }}
+        >
+          <Trash2 size={14} />
+        </button>
 
         {/* GitHub link button */}
         <a
@@ -963,6 +1006,125 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && selectedIssue && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme.colors.background,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '8px',
+              padding: '24px',
+              minWidth: '320px',
+              maxWidth: '400px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: theme.colors.error ? `${theme.colors.error}20` : '#ef444420',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.colors.error || '#ef4444',
+                }}
+              >
+                <Trash2 size={20} />
+              </div>
+              <h3
+                style={{
+                  margin: 0,
+                  fontFamily: theme.fonts.heading,
+                  fontSize: theme.fontSizes[2],
+                  fontWeight: 600,
+                  color: theme.colors.text,
+                }}
+              >
+                Delete Issue?
+              </h3>
+            </div>
+            <p
+              style={{
+                margin: '0 0 24px 0',
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.textSecondary,
+                lineHeight: 1.5,
+              }}
+            >
+              Are you sure you want to delete "{selectedIssue.title}"? This action cannot be undone.
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: '6px',
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes[1],
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                style={{
+                  padding: '8px 16px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  backgroundColor: theme.colors.error || '#ef4444',
+                  color: '#ffffff',
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Trash2,
   EyeOff,
+  Loader2,
 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
@@ -367,6 +368,20 @@ const CommentEvent: React.FC<{
 }> = ({ event, onToggleReaction, getMergedReactions }) => {
   const { theme } = useTheme();
   const user = event.user || event.actor;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLargeView, setIsLargeView] = useState(true);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      if (containerRef.current) {
+        setIsLargeView(containerRef.current.offsetWidth >= 400);
+      }
+    };
+
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   const mergedReactions = getMergedReactions
     ? getMergedReactions(event.id, 'comment', event.reactions)
@@ -374,21 +389,28 @@ const CommentEvent: React.FC<{
 
   return (
     <div
+      ref={containerRef}
       style={{
-        display: 'flex',
-        gap: '12px',
         padding: '16px',
         borderBottom: `1px solid ${theme.colors.border}`,
       }}
     >
-      <Avatar user={user} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          marginBottom: '8px',
+        }}
+      >
+        <Avatar user={user} />
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginBottom: '8px',
+            flex: 1,
+            minWidth: 0,
           }}
         >
           <span
@@ -427,6 +449,12 @@ const CommentEvent: React.FC<{
             </span>
           )}
         </div>
+      </div>
+      <div
+        style={{
+          marginLeft: isLargeView ? '44px' : '0',
+        }}
+      >
         <div
           style={{
             backgroundColor: theme.colors.backgroundSecondary,
@@ -458,6 +486,20 @@ const CommentEvent: React.FC<{
  */
 const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) => {
   const { theme } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLargeView, setIsLargeView] = useState(true);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      if (containerRef.current) {
+        setIsLargeView(containerRef.current.offsetWidth >= 400);
+      }
+    };
+
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   const stateConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
     approved: {
@@ -486,21 +528,28 @@ const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) 
 
   return (
     <div
+      ref={containerRef}
       style={{
-        display: 'flex',
-        gap: '12px',
         padding: '16px',
         borderBottom: `1px solid ${theme.colors.border}`,
       }}
     >
-      <Avatar user={event.user} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          marginBottom: event.body ? '8px' : 0,
+        }}
+      >
+        <Avatar user={event.user} />
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginBottom: event.body ? '8px' : 0,
+            flex: 1,
+            minWidth: 0,
           }}
         >
           <span style={{ color: config.color }}>{config.icon}</span>
@@ -534,7 +583,13 @@ const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) 
             {formatDate(event.submitted_at)}
           </span>
         </div>
-        {event.body && (
+      </div>
+      {event.body && (
+        <div
+          style={{
+            marginLeft: isLargeView ? '44px' : '0',
+          }}
+        >
           <div
             style={{
               backgroundColor: theme.colors.backgroundSecondary,
@@ -550,8 +605,8 @@ const ReviewEvent: React.FC<{ event: GitHubTimelineReviewEvent }> = ({ event }) 
               transparentBackground
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -907,6 +962,20 @@ const InlineReviewComment: React.FC<{
   getMergedReactions?: (itemId: number, itemType: 'review_comment', apiReactions?: GitHubReactions) => ExtendedReactions;
 }> = ({ comment, onToggleReaction, getMergedReactions }) => {
   const { theme } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLargeView, setIsLargeView] = useState(true);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      if (containerRef.current) {
+        setIsLargeView(containerRef.current.offsetWidth >= 400);
+      }
+    };
+
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   const mergedReactions = getMergedReactions
     ? getMergedReactions(comment.id, 'review_comment', comment.reactions)
@@ -914,22 +983,29 @@ const InlineReviewComment: React.FC<{
 
   return (
     <div
+      ref={containerRef}
       style={{
-        display: 'flex',
-        gap: '12px',
         padding: '12px 16px',
         borderBottom: `1px solid ${theme.colors.border}`,
         backgroundColor: theme.colors.backgroundSecondary,
       }}
     >
-      <Avatar user={comment.user} size={28} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          marginBottom: '8px',
+        }}
+      >
+        <Avatar user={comment.user} size={28} />
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginBottom: '8px',
+            flex: 1,
+            minWidth: 0,
           }}
         >
           <span
@@ -969,6 +1045,12 @@ const InlineReviewComment: React.FC<{
             </span>
           )}
         </div>
+      </div>
+      <div
+        style={{
+          marginLeft: isLargeView ? '40px' : '0',
+        }}
+      >
         <div
           style={{
             backgroundColor: theme.colors.background,
@@ -1084,6 +1166,12 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
 
   // Toggle to show/hide reacted messages
   const [showHiddenMessages, setShowHiddenMessages] = useState(false);
+
+  // Comment input state
+  const [commentText, setCommentText] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Handle delete action
   const handleDelete = () => {
@@ -1204,6 +1292,34 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
     }
   }, [context, events]);
 
+  // Handle sending comment
+  const handleSendComment = useCallback(() => {
+    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
+    const messagesData = messagesSlice?.data;
+
+    if (!events || !messagesData?.target || !commentText.trim() || isSending) return;
+
+    const { owner, repo, target } = messagesData;
+
+    setIsSending(true);
+    setSendError(null);
+
+    (events as PanelEventEmitter).emit({
+      type: 'github-messages:comment:create',
+      source: 'github-messages-panel',
+      timestamp: Date.now(),
+      payload: {
+        owner,
+        repo,
+        targetType: target.type,
+        targetNumber: target.number,
+        body: commentText.trim(),
+      },
+    });
+
+    setCommentText('');
+  }, [context, events, commentText, isSending]);
+
   // Helper to merge API reactions with local optimistic updates
   const getMergedReactions = useCallback((
     itemId: string | number,
@@ -1316,6 +1432,56 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
       if (typeof unsubPR === 'function') unsubPR();
     };
   }, [events]);
+
+  // Auto-grow textarea as content changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      const minHeight = 36; // Single line height
+      const maxHeight = 200;
+
+      // If empty, always reset to minimum
+      if (!commentText) {
+        textareaRef.current.style.height = `${minHeight}px`;
+        return;
+      }
+
+      textareaRef.current.style.height = `${minHeight}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [commentText]);
+
+  // Listen for comment creation success/error events
+  useEffect(() => {
+    if (!events) return;
+
+    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
+    const messagesData = messagesSlice?.data;
+
+    const unsubscribers = [
+      (events as PanelEventEmitter).on('github-messages:comment:created', (event) => {
+        const payload = event.payload as { targetNumber: number };
+        if (messagesData?.target && payload.targetNumber === messagesData.target.number) {
+          setIsSending(false);
+          setSendError(null);
+        }
+      }),
+      (events as PanelEventEmitter).on('github-messages:comment:error', (event) => {
+        const payload = event.payload as { targetNumber: number; error: string };
+        if (messagesData?.target && payload.targetNumber === messagesData.target.number) {
+          setIsSending(false);
+          setSendError(payload.error);
+        }
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [events, context]);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -1546,28 +1712,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
           </button>
         )}
 
-        {/* Delete button */}
-        <button
-          type="button"
-          onClick={() => setShowDeleteConfirm(true)}
-          title="Delete issue"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '28px',
-            height: '28px',
-            padding: 0,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '6px',
-            backgroundColor: theme.colors.background,
-            color: theme.colors.textSecondary,
-            cursor: 'pointer',
-          }}
-        >
-          <Trash2 size={14} />
-        </button>
-
         {/* External link */}
         <a
           href={target.html_url}
@@ -1670,6 +1814,141 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
               })}
           </>
         )}
+      </div>
+
+      {/* Comment Input Area */}
+      <div
+        style={{
+          borderTop: `1px solid ${theme.colors.border}`,
+          backgroundColor: theme.colors.background,
+          padding: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}
+      >
+        {/* Error message */}
+        {sendError && (
+          <div
+            style={{
+              padding: '8px 12px',
+              backgroundColor: theme.colors.error ? `${theme.colors.error}20` : '#ef444420',
+              border: `1px solid ${theme.colors.error || '#ef4444'}`,
+              borderRadius: '6px',
+              color: theme.colors.error || '#ef4444',
+              fontSize: theme.fontSizes[0],
+              fontFamily: theme.fonts.body,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <AlertCircle size={14} />
+            <span>{sendError}</span>
+            <button
+              type="button"
+              onClick={() => setSendError(null)}
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'inherit',
+                padding: '2px',
+              }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {/* Input container */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'flex-end',
+          }}
+        >
+          {/* Textarea */}
+          <textarea
+            ref={textareaRef}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            onKeyDown={(e) => {
+              // Cmd/Ctrl + Enter to send
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleSendComment();
+              }
+            }}
+            placeholder="Write a comment"
+            disabled={isSending}
+            aria-label="Write a comment"
+            style={{
+              flex: 1,
+              height: '36px',
+              maxHeight: '200px',
+              padding: '8px 12px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '6px',
+              backgroundColor: isSending ? theme.colors.backgroundSecondary : theme.colors.background,
+              color: theme.colors.text,
+              fontFamily: theme.fonts.body,
+              fontSize: theme.fontSizes[1],
+              lineHeight: 1.5,
+              resize: 'none',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = theme.colors.primary;
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = theme.colors.border;
+            }}
+          />
+
+          {/* Send button */}
+          <button
+            type="button"
+            onClick={handleSendComment}
+            disabled={!commentText.trim() || isSending}
+            aria-label="Send comment"
+            title={isSending ? 'Sending...' : 'Send comment (Cmd/Ctrl+Enter)'}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              borderRadius: '6px',
+              backgroundColor: (!commentText.trim() || isSending)
+                ? theme.colors.backgroundSecondary
+                : theme.colors.primary,
+              color: (!commentText.trim() || isSending)
+                ? theme.colors.textMuted
+                : (theme.colors.textOnPrimary || '#ffffff'),
+              cursor: (!commentText.trim() || isSending) ? 'not-allowed' : 'pointer',
+              fontFamily: theme.fonts.body,
+              fontSize: theme.fontSizes[1],
+              fontWeight: theme.fontWeights?.medium || 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'background-color 0.2s',
+              opacity: (!commentText.trim() || isSending) ? 0.5 : 1,
+            }}
+          >
+            {isSending ? (
+              <>
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                Sending...
+              </>
+            ) : (
+              'Send'
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Delete confirmation modal */}
