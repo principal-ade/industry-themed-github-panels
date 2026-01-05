@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import {
   Github,
   AlertCircle,
@@ -9,6 +10,7 @@ import {
   LogIn,
   ChevronDown,
   Tag,
+  Plus,
 } from 'lucide-react';
 
 import type { PanelComponentProps } from '../types';
@@ -17,6 +19,7 @@ import type {
   GitHubIssuesSliceData,
   IssueSelectedEventPayload,
 } from '../types/github';
+import { CreateIssueModal } from '../components/CreateIssueModal';
 
 /**
  * Format a date string to a relative time description
@@ -46,6 +49,14 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
   events,
 }) => {
   const { theme } = useTheme();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Listen for panel focus events
+  usePanelFocusListener(
+    'github-issues',
+    events,
+    () => panelRef.current?.focus()
+  );
 
   // Get issues from data slice
   const issuesSlice = context.getSlice<GitHubIssuesSliceData>('github-issues');
@@ -64,6 +75,9 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
 
   // State for selected issue
   const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
+
+  // State for create issue modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Extract unique labels from all issues
   const uniqueLabels = useMemo(() => {
@@ -112,13 +126,14 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
     });
   };
 
-  const handleRefresh = () => {
-    events.emit({
-      type: 'github-issues:refresh',
-      source: 'github-issues-panel',
-      timestamp: Date.now(),
-      payload: {},
-    });
+  const handleRefresh = async () => {
+    // Call the context's refresh method to reload issues
+    await context.refresh('repository', 'github-issues');
+  };
+
+  const handleIssueCreated = async () => {
+    // Refresh the issues list after creating a new issue
+    await handleRefresh();
   };
 
   const handleLogin = () => {
@@ -273,6 +288,8 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
 
   return (
     <div
+      ref={panelRef}
+      tabIndex={-1}
       style={{
         height: '100%',
         display: 'flex',
@@ -280,6 +297,7 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
         fontFamily: theme.fonts.body,
+        outline: 'none',
       }}
     >
       {/* Header - 40px total including border */}
@@ -422,6 +440,35 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
               </div>
             )}
 
+            {/* Create Issue Button */}
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: 'none',
+                backgroundColor: theme.colors.primary,
+                color: theme.colors.textOnPrimary || theme.colors.background,
+                fontSize: `${theme.fontSizes[0]}px`,
+                fontWeight: theme.fontWeights.medium,
+                cursor: 'pointer',
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              <Plus size={12} />
+              New
+            </button>
+
             <button
               type="button"
               onClick={handleRefresh}
@@ -471,6 +518,36 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
               <p style={{ margin: 0, fontSize: `${theme.fontSizes[2]}px` }}>
                 There are no open issues in this repository.
               </p>
+
+              {/* Create Issue Button */}
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                style={{
+                  marginTop: '16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.textOnPrimary || theme.colors.background,
+                  fontSize: `${theme.fontSizes[2]}px`,
+                  fontWeight: theme.fontWeights.semibold,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                <Plus size={16} />
+                Create Issue
+              </button>
             </div>
           </div>
         ) : (
@@ -567,6 +644,16 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
           animation: spin 1s linear infinite;
         }
       `}</style>
+
+      {/* Create Issue Modal */}
+      <CreateIssueModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        owner={owner}
+        repo={repo}
+        onIssueCreated={handleIssueCreated}
+        apiBaseUrl={typeof window !== 'undefined' ? window.location.origin : ''}
+      />
     </div>
   );
 };

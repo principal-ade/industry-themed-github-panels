@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Github,
   MessageSquare,
-  ExternalLink,
   X,
+  FileText,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type { GitHubIssue, IssueSelectedEventPayload } from '../types/github';
+
+/** Task creation status for an issue */
+type TaskCreationStatus = 'idle' | 'loading' | 'success' | 'error';
+
+interface TaskCreationState {
+  status: TaskCreationStatus;
+  taskId?: string;
+  error?: string;
+}
 
 /**
  * Format a date string to a relative time description
@@ -38,6 +51,67 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
   const [selectedIssue, setSelectedIssue] = useState<GitHubIssue | null>(null);
   const [owner, setOwner] = useState<string>('');
   const [repo, setRepo] = useState<string>('');
+  const [taskCreation, setTaskCreation] = useState<TaskCreationState>({ status: 'idle' });
+  const [showTaskTypeModal, setShowTaskTypeModal] = useState(false);
+  const [modalStep, setModalStep] = useState<'type' | 'instructions'>('type');
+  const [selectedTaskType, setSelectedTaskType] = useState<'investigate' | 'fix' | null>(null);
+  const [additionalInstructions, setAdditionalInstructions] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Listen for panel focus events
+  usePanelFocusListener(
+    'github-issue-detail',
+    events,
+    () => panelRef.current?.focus()
+  );
+
+  // Handle "Create Task from Issue" button click - opens modal
+  const handleCreateTask = () => {
+    setShowTaskTypeModal(true);
+    setModalStep('type');
+    setSelectedTaskType(null);
+    setAdditionalInstructions('');
+  };
+
+  // Handle task type selection - move to instructions step
+  const handleSelectTaskType = (taskType: 'investigate' | 'fix') => {
+    setSelectedTaskType(taskType);
+    setModalStep('instructions');
+  };
+
+  // Handle final task creation with instructions
+  const handleSubmitTask = () => {
+    if (!events || !selectedIssue || !selectedTaskType) return;
+
+    setShowTaskTypeModal(false);
+    setTaskCreation({ status: 'loading' });
+
+    // Emit event for host to handle
+    (events as PanelEventEmitter).emit({
+      type: 'issue:create-task',
+      source: 'github-issue-detail-panel',
+      timestamp: Date.now(),
+      payload: {
+        issue: selectedIssue,
+        owner,
+        repo,
+        taskType: selectedTaskType,
+        additionalInstructions: additionalInstructions.trim() || undefined,
+      },
+    });
+
+    // Reset modal state
+    setModalStep('type');
+    setSelectedTaskType(null);
+    setAdditionalInstructions('');
+  };
+
+  // Handle going back to task type selection
+  const handleBackToTaskType = () => {
+    setModalStep('type');
+    setSelectedTaskType(null);
+    setAdditionalInstructions('');
+  };
 
   // Listen for issue:selected events
   useEffect(() => {
@@ -47,6 +121,8 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
       setSelectedIssue(event.payload.issue);
       setOwner(event.payload.owner);
       setRepo(event.payload.repo);
+      // Reset task creation state when a new issue is selected
+      setTaskCreation({ status: 'idle' });
     };
 
     // Subscribe to issue:selected events
@@ -58,6 +134,38 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
       }
     };
   }, [events]);
+
+  // Listen for task creation success/failure events
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribers = [
+      (events as PanelEventEmitter).on('issue:task-created', (event) => {
+        const payload = event.payload as { issueNumber: number; taskId: string };
+        if (selectedIssue && payload.issueNumber === selectedIssue.number) {
+          setTaskCreation({
+            status: 'success',
+            taskId: payload.taskId,
+          });
+        }
+      }),
+      (events as PanelEventEmitter).on('issue:create-task:error', (event) => {
+        const payload = event.payload as { issueNumber: number; error: string };
+        if (selectedIssue && payload.issueNumber === selectedIssue.number) {
+          setTaskCreation({
+            status: 'error',
+            error: payload.error,
+          });
+        }
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [events, selectedIssue]);
 
   // Handle back/close
   const handleBack = () => {
@@ -86,7 +194,7 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
   // Empty state when no issue is selected
   if (!selectedIssue) {
     return (
-      <div style={containerStyle}>
+      <div ref={panelRef} tabIndex={-1} style={{ ...containerStyle, outline: 'none' }}>
         <div
           style={{
             flex: 1,
@@ -137,8 +245,15 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
   const statusBg = `${statusColor}20`;
   const statusLabel = isOpen ? 'Open' : 'Closed';
 
+  // Check if this issue already has a task created (by checking for 'backlog-task:*' labels)
+  const taskLabel = selectedIssue.labels?.find(label =>
+    label.name === 'backlog-task:investigate' || label.name === 'backlog-task:fix'
+  );
+  const hasTask = !!taskLabel;
+  const taskType = taskLabel?.name.split(':')[1] as 'investigate' | 'fix' | undefined;
+
   return (
-    <div style={containerStyle}>
+    <div ref={panelRef} tabIndex={-1} style={{ ...containerStyle, outline: 'none' }}>
       {/* Header - 40px to match other panels */}
       <div
         style={{
@@ -194,48 +309,10 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
           by <span style={{ color: theme.colors.primary }}>{selectedIssue.user.login}</span> {formatDate(selectedIssue.created_at)}
         </span>
 
-        {/* Comments */}
-        {selectedIssue.comments > 0 && (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: theme.colors.textSecondary,
-              fontSize: theme.fontSizes[0],
-            }}
-          >
-            <MessageSquare size={12} />
-            {selectedIssue.comments}
-          </span>
-        )}
-
-        {/* Assignees */}
-        {selectedIssue.assignees && selectedIssue.assignees.length > 0 && (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: theme.colors.textSecondary,
-              fontSize: theme.fontSizes[0],
-              fontFamily: theme.fonts.body,
-            }}
-          >
-            assigned to{' '}
-            {selectedIssue.assignees.map((assignee, index) => (
-              <span key={assignee.login}>
-                <span style={{ color: theme.colors.primary }}>{assignee.login}</span>
-                {index < selectedIssue.assignees.length - 1 && ', '}
-              </span>
-            ))}
-          </span>
-        )}
-
         {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* External link */}
+        {/* GitHub link button */}
         <a
           href={selectedIssue.html_url}
           target="_blank"
@@ -255,7 +332,7 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
             textDecoration: 'none',
           }}
         >
-          <ExternalLink size={14} />
+          <Github size={16} />
         </a>
 
         {/* Close button */}
@@ -279,6 +356,303 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
         >
           <X size={16} />
         </button>
+      </div>
+
+      {/* Assignees section - only shown if there are assignees */}
+      {selectedIssue.assignees && selectedIssue.assignees.length > 0 && (
+        <div
+          style={{
+            padding: '12px 16px',
+            backgroundColor: theme.colors.backgroundSecondary,
+            borderBottom: `1px solid ${theme.colors.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <span
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: theme.fontSizes[1],
+              fontFamily: theme.fonts.body,
+              fontWeight: theme.fontWeights.medium,
+            }}
+          >
+            Assigned to:
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {selectedIssue.assignees.map((assignee) => (
+              <div
+                key={assignee.login}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  backgroundColor: theme.colors.background,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: '16px',
+                }}
+              >
+                {assignee.avatar_url && (
+                  <img
+                    src={assignee.avatar_url}
+                    alt={assignee.login}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                    }}
+                  />
+                )}
+                <span
+                  style={{
+                    color: theme.colors.text,
+                    fontSize: theme.fontSizes[1],
+                    fontFamily: theme.fonts.body,
+                    fontWeight: theme.fontWeights.medium,
+                  }}
+                >
+                  {assignee.login}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Actions section - buttons split width equally */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '1px',
+          backgroundColor: theme.colors.border,
+          borderBottom: `1px solid ${theme.colors.border}`,
+        }}
+      >
+        {/* Create Task / View Task / Status button */}
+        <div style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          {taskCreation.status === 'idle' && !hasTask && (
+            <button
+              onClick={handleCreateTask}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: theme.colors.primary,
+                fontSize: theme.fontSizes[1],
+                fontWeight: theme.fontWeights.medium,
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <FileText size={16} />
+              <span style={{ lineHeight: 1 }}>Create Task</span>
+            </button>
+          )}
+
+          {taskCreation.status === 'idle' && hasTask && (
+            <button
+              onClick={() => {
+                // Emit event to view the task in kanban board
+                if (events) {
+                  (events as PanelEventEmitter).emit({
+                    type: 'task:view',
+                    source: 'github-issue-detail-panel',
+                    timestamp: Date.now(),
+                    payload: {
+                      issue: selectedIssue,
+                      owner,
+                      repo,
+                    },
+                  });
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: theme.colors.success,
+                fontSize: theme.fontSizes[1],
+                fontWeight: theme.fontWeights.medium,
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <CheckCircle size={16} />
+              <span style={{ lineHeight: 1 }}>Task Started</span>
+            </button>
+          )}
+
+          {taskCreation.status === 'loading' && (
+            <button
+              disabled
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'default',
+                color: theme.colors.textSecondary,
+                fontSize: theme.fontSizes[1],
+              }}
+            >
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+              <span style={{ lineHeight: 1 }}>Creating Task...</span>
+            </button>
+          )}
+
+          {taskCreation.status === 'success' && (
+            <button
+              disabled
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'default',
+                color: theme.colors.success,
+                fontSize: theme.fontSizes[1],
+                fontWeight: theme.fontWeights.medium,
+              }}
+            >
+              <CheckCircle size={16} />
+              <span style={{ lineHeight: 1 }}>Task Created</span>
+            </button>
+          )}
+
+          {taskCreation.status === 'error' && (
+            <button
+              onClick={() => setTaskCreation({ status: 'idle' })}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: theme.colors.error,
+                fontSize: theme.fontSizes[1],
+                fontWeight: theme.fontWeights.medium,
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+              title={taskCreation.error}
+            >
+              <AlertCircle size={16} />
+              <span style={{ lineHeight: 1 }}>Retry Task Creation</span>
+            </button>
+          )}
+        </div>
+
+        {/* View Discussion button */}
+        <div style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <button
+            onClick={() => {
+              // Emit event to view discussion/messages
+              if (events) {
+                (events as PanelEventEmitter).emit({
+                  type: 'issue:view-discussion',
+                  source: 'github-issue-detail-panel',
+                  timestamp: Date.now(),
+                  payload: {
+                    issue: selectedIssue,
+                    owner,
+                    repo,
+                  },
+                });
+              }
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: theme.colors.text,
+              fontSize: theme.fontSizes[1],
+              fontWeight: theme.fontWeights.medium,
+              transition: 'background 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.colors.backgroundSecondary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            <MessageSquare size={16} />
+            <span style={{ lineHeight: 1 }}>View Discussion</span>
+            {selectedIssue.comments > 0 && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '20px',
+                  padding: '2px 6px',
+                  backgroundColor: theme.colors.backgroundSecondary,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: '10px',
+                  fontSize: theme.fontSizes[0],
+                  fontWeight: theme.fontWeights.semibold,
+                  color: theme.colors.textSecondary,
+                  lineHeight: 1,
+                }}
+              >
+                {selectedIssue.comments}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Title - fixed */}
@@ -331,6 +705,267 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
             </div>
           )}
       </div>
+
+      {/* Task Creation Modal (Two Steps) */}
+      {showTaskTypeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+          }}
+          onClick={() => setShowTaskTypeModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Step 1: Choose Task Type */}
+            {modalStep === 'type' && (
+              <>
+                {/* Modal Header */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h2
+                    style={{
+                      margin: 0,
+                      marginBottom: '8px',
+                      fontFamily: theme.fonts.heading,
+                      fontSize: theme.fontSizes[3],
+                      fontWeight: 600,
+                      color: theme.colors.text,
+                    }}
+                  >
+                    Choose Task Type
+                  </h2>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: theme.fonts.body,
+                      fontSize: theme.fontSizes[1],
+                      color: theme.colors.textSecondary,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    What type of task do you want to create for this issue?
+                  </p>
+                </div>
+
+                {/* Task Type Options */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Investigate Option */}
+                  <button
+                    onClick={() => handleSelectTaskType('investigate')}
+                    style={{
+                      padding: '16px',
+                      border: `2px solid ${theme.colors.border}`,
+                      borderRadius: '8px',
+                      backgroundColor: theme.colors.background,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.primary;
+                      e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.border;
+                      e.currentTarget.style.backgroundColor = theme.colors.background;
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: theme.fonts.heading,
+                        fontSize: theme.fontSizes[2],
+                        fontWeight: 600,
+                        color: theme.colors.text,
+                        marginBottom: '4px',
+                      }}
+                    >
+                      🔍 Investigate Issue
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: theme.fonts.body,
+                        fontSize: theme.fontSizes[1],
+                        color: theme.colors.textSecondary,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Research and identify the root cause of the problem
+                    </div>
+                  </button>
+
+                  {/* Fix Option */}
+                  <button
+                    onClick={() => handleSelectTaskType('fix')}
+                    style={{
+                      padding: '16px',
+                      border: `2px solid ${theme.colors.border}`,
+                      borderRadius: '8px',
+                      backgroundColor: theme.colors.background,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.primary;
+                      e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.border;
+                      e.currentTarget.style.backgroundColor = theme.colors.background;
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: theme.fonts.heading,
+                        fontSize: theme.fontSizes[2],
+                        fontWeight: 600,
+                        color: theme.colors.text,
+                        marginBottom: '4px',
+                      }}
+                    >
+                      🔧 Fix Issue
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: theme.fonts.body,
+                        fontSize: theme.fontSizes[1],
+                        color: theme.colors.textSecondary,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Implement a solution to resolve the issue
+                    </div>
+                  </button>
+                </div>
+
+                {/* Cancel Button */}
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                  <button
+                    onClick={() => setShowTaskTypeModal(false)}
+                    style={{
+                      padding: '8px 16px',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      color: theme.colors.textSecondary,
+                      fontSize: theme.fontSizes[1],
+                      fontFamily: theme.fonts.body,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Step 2: Additional Instructions */}
+            {modalStep === 'instructions' && (
+              <>
+                {/* Modal Header */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h2
+                    style={{
+                      margin: 0,
+                      marginBottom: '8px',
+                      fontFamily: theme.fonts.heading,
+                      fontSize: theme.fontSizes[3],
+                      fontWeight: 600,
+                      color: theme.colors.text,
+                    }}
+                  >
+                    Additional Instructions
+                  </h2>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: theme.fonts.body,
+                      fontSize: theme.fontSizes[1],
+                      color: theme.colors.textSecondary,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Add any specific instructions or context for this task (optional)
+                  </p>
+                </div>
+
+                {/* Textarea */}
+                <textarea
+                  value={additionalInstructions}
+                  onChange={(e) => setAdditionalInstructions(e.target.value)}
+                  placeholder="e.g., Focus on the authentication flow, check error handling in useWebSocket hook, etc."
+                  style={{
+                    width: '100%',
+                    minHeight: '120px',
+                    padding: '12px',
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: '6px',
+                    backgroundColor: theme.colors.background,
+                    color: theme.colors.text,
+                    fontFamily: theme.fonts.body,
+                    fontSize: theme.fontSizes[1],
+                    lineHeight: 1.5,
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                  }}
+                />
+
+                {/* Action Buttons */}
+                <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={handleBackToTaskType}
+                    style={{
+                      padding: '8px 16px',
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: '6px',
+                      background: theme.colors.background,
+                      cursor: 'pointer',
+                      color: theme.colors.text,
+                      fontSize: theme.fontSizes[1],
+                      fontFamily: theme.fonts.body,
+                      fontWeight: theme.fontWeights.medium,
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleSubmitTask}
+                    style={{
+                      padding: '8px 24px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      background: theme.colors.primary,
+                      cursor: 'pointer',
+                      color: theme.colors.textOnPrimary || '#ffffff',
+                      fontSize: theme.fontSizes[1],
+                      fontFamily: theme.fonts.body,
+                      fontWeight: theme.fontWeights.medium,
+                    }}
+                  >
+                    Create Task
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
