@@ -343,13 +343,21 @@ const mockTimelineForIssue: Record<number, GitHubTimelineEvent[]> = {
 const IssueTaskLifecycleDemo: React.FC<{
   issues: GitHubIssue[];
   showMessages?: boolean;
-}> = ({ issues, showMessages = false }) => {
+}> = ({ issues: initialIssues, showMessages = false }) => {
+  // State for issues (so we can remove deleted issues)
+  const [issues, setIssues] = React.useState<GitHubIssue[]>(initialIssues);
+
   // State for messages slice data
   const [messagesData, setMessagesData] = React.useState<GitHubMessagesSliceData | null>(null);
 
-  // Create shared mock infrastructure
-  const events = createMockEvents();
-  const actions = createMockActions();
+  // Create shared mock infrastructure (memoized to persist across renders)
+  const events = React.useMemo(() => createMockEvents(), []);
+  const actions = React.useMemo(() => createMockActions(), []);
+
+  // Sync issues state when prop changes (for story switching)
+  React.useEffect(() => {
+    setIssues(initialIssues);
+  }, [initialIssues]);
 
   // Create GitHub issues slice
   const sliceData: GitHubIssuesSliceData = {
@@ -453,9 +461,13 @@ const IssueTaskLifecycleDemo: React.FC<{
       });
     });
 
-    // When an issue is deselected (X button clicked), focus back to issues list
+    // When an issue is deselected (X button clicked), clear messages and focus back to issues list
     const unsubscribeIssueDeselected = events.on('issue:deselected', () => {
-      console.log('[Lifecycle] Issue deselected - focusing back to issues list');
+      console.log('[Lifecycle] Issue deselected - clearing messages panel and focusing back to issues list');
+
+      // Clear messages data to return panel to empty state
+      setMessagesData(null);
+      console.log('[Lifecycle] Messages panel cleared');
 
       // Emit focus event back to the issues panel
       events.emit({
@@ -496,6 +508,32 @@ const IssueTaskLifecycleDemo: React.FC<{
       console.log(`[Lifecycle] View task for issue #${payload.issue.number}`);
       // In real implementation, this would navigate to kanban board or open task file
       alert(`Would navigate to task for issue #${payload.issue.number}: ${payload.issue.title}`);
+    });
+
+    // When an issue is deleted, remove it from list and trigger deselection flow
+    const unsubscribeIssueDeleted = events.on('github-issue:delete', (event) => {
+      const payload = event.payload as { owner: string; repo: string; number: number };
+      console.log(`[Lifecycle] Issue #${payload.number} deleted - removing from list and triggering deselection`);
+
+      // Remove the issue from the issues list
+      setIssues(prevIssues => {
+        const filtered = prevIssues.filter(issue => issue.number !== payload.number);
+        console.log(`[Lifecycle] Removed issue #${payload.number} from list (${prevIssues.length} -> ${filtered.length} issues)`);
+        return filtered;
+      });
+
+      // Emit issue:deselected to clear both detail and messages panels
+      // The deselected handler above will clear messages and refocus issues list
+      events.emit({
+        type: 'issue:deselected',
+        source: 'issue-task-lifecycle-story',
+        timestamp: Date.now(),
+        payload: {},
+      });
+
+      // Note: In a real implementation, this would also:
+      // - Call GitHub API to actually delete/close the issue
+      // - Handle any errors from the API
     });
 
     // When create task is requested, simulate the task creation process
@@ -575,6 +613,7 @@ const IssueTaskLifecycleDemo: React.FC<{
       unsubscribeIssueDeselected();
       unsubscribeViewDiscussion();
       unsubscribeViewTask();
+      unsubscribeIssueDeleted();
       unsubscribeCreateTask();
     };
   }, [events, showMessages]);
@@ -728,6 +767,21 @@ GitHubIssuesPanel (click)
   → Git Commit
   → issue:task-created
   → Kanban Panel (refreshes)
+
+Issue Close Flow (X button):
+  → issue:deselected emitted
+  → Messages Panel cleared (returns to empty state)
+  → Issue Detail Panel cleared (returns to empty state)
+  → Focus returns to Issues List Panel
+
+Issue Delete Flow (Trash button):
+  → github-issue:delete (with owner, repo, number)
+  → Issue removed from Issues List
+  → issue:deselected emitted
+  → Messages Panel cleared (returns to empty state)
+  → Issue Detail Panel cleared (returns to empty state)
+  → Focus returns to Issues List Panel
+  → (In real implementation: also call GitHub API to delete on server)
 \`\`\`
 
 ## Try It
@@ -736,6 +790,28 @@ GitHubIssuesPanel (click)
 2. View details in the right panel
 3. Check browser console for event logs
 4. (Future) Click "Push to Backlog" to create a task
+
+## Testing Close/Delete Issue Behavior
+
+**To test closing an issue (X button):**
+1. Select an issue to view it and load its messages
+2. Click the X button in the issue detail panel header
+3. Observe: both messages and detail panels clear and return to empty state
+
+**To test deleting an issue (Trash button):**
+1. Select an issue to view it and load its messages
+2. Click the trash/delete button in the issue detail panel header
+3. Confirm the deletion in the modal
+4. Observe:
+   - The issue is removed from the issues list on the left
+   - Both messages and detail panels clear and return to empty state
+   - Focus returns to the issues list panel
+
+**Behavior:**
+- **Close (X button)**: Emits \`issue:deselected\` to clear panels, issue remains in list
+- **Delete (Trash button)**: Emits \`github-issue:delete\`, removes issue from list, then emits \`issue:deselected\` to clear panels
+- Both actions clear the messages panel and detail panel
+- Focus returns to the issues list panel in both cases
         `,
       },
     },

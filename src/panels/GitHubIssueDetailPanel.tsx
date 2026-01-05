@@ -115,7 +115,7 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
     setAdditionalInstructions('');
   };
 
-  // Listen for issue:selected events
+  // Listen for issue:selected and issue:deselected events
   useEffect(() => {
     if (!events) return;
 
@@ -127,13 +127,21 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
       setTaskCreation({ status: 'idle' });
     };
 
-    // Subscribe to issue:selected events
-    const unsubscribe = (events as PanelEventEmitter).on('issue:selected', handleIssueSelected);
+    const handleIssueDeselected = () => {
+      // Clear the issue detail panel state
+      setSelectedIssue(null);
+      setOwner('');
+      setRepo('');
+      setTaskCreation({ status: 'idle' });
+    };
+
+    // Subscribe to events
+    const unsubscribeSelected = (events as PanelEventEmitter).on('issue:selected', handleIssueSelected);
+    const unsubscribeDeselected = (events as PanelEventEmitter).on('issue:deselected', handleIssueDeselected);
 
     return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      if (typeof unsubscribeSelected === 'function') unsubscribeSelected();
+      if (typeof unsubscribeDeselected === 'function') unsubscribeDeselected();
     };
   }, [events]);
 
