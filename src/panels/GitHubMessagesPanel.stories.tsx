@@ -300,6 +300,11 @@ const mockPRMessagesData: GitHubMessagesSliceData = {
     created_at: '2024-12-10T09:00:00Z',
     html_url: 'https://github.com/acme/web-app/pull/42',
     draft: false,
+    labels: [
+      { id: 1, name: 'enhancement', color: 'a2eeef' },
+      { id: 2, name: 'security', color: 'd73a4a' },
+    ],
+    assignees: [mockUsers.bob],
   },
   timeline: [
     mockCommit1,
@@ -341,6 +346,11 @@ const mockIssueMessagesData: GitHubMessagesSliceData = {
     user: mockUsers.bob,
     created_at: '2024-12-09T08:00:00Z',
     html_url: 'https://github.com/acme/web-app/issues/128',
+    labels: [
+      { id: 3, name: 'bug', color: 'd73a4a' },
+      { id: 4, name: 'mobile', color: 'fbca04' },
+    ],
+    assignees: [mockUsers.alice, mockUsers.charlie],
   },
   timeline: [
     {
@@ -596,6 +606,8 @@ export const EmptyConversation: Story = {
         user: mockUsers.alice,
         created_at: new Date().toISOString(),
         html_url: 'https://github.com/acme/web-app/issues/1',
+        labels: [],
+        assignees: [],
       },
       timeline: [],
       reviewComments: [],
@@ -624,6 +636,8 @@ export const Loading: Story = {
           user: mockUsers.alice,
           created_at: new Date().toISOString(),
           html_url: 'https://github.com/acme/web-app/pull/42',
+          labels: [],
+          assignees: [],
         },
         timeline: [],
         reviewComments: [],
@@ -653,6 +667,8 @@ export const ErrorState: Story = {
         user: mockUsers.alice,
         created_at: new Date().toISOString(),
         html_url: 'https://github.com/acme/web-app/pull/42',
+        labels: [],
+        assignees: [],
       },
       timeline: [],
       reviewComments: [],

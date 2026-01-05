@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MessageSquare,
   GitCommit,
@@ -15,6 +15,8 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronRight,
+  Trash2,
+  EyeOff,
 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
@@ -38,6 +40,46 @@ import type {
   IssueSelectedEventPayload,
   PullRequestSelectedEventPayload,
 } from '../types/github';
+
+/**
+ * Reaction content types (GitHub API format)
+ */
+type ReactionContent = '+1' | '-1' | 'laugh' | 'hooray' | 'confused' | 'heart' | 'rocket' | 'eyes';
+
+/**
+ * Map GitHub reaction types to emoji
+ */
+const REACTION_EMOJI: Record<ReactionContent, string> = {
+  '+1': '👍',
+  '-1': '👎',
+  'laugh': '😄',
+  'hooray': '🎉',
+  'confused': '😕',
+  'heart': '❤️',
+  'rocket': '🚀',
+  'eyes': '👀',
+};
+
+/**
+ * Order reactions should appear (most positive first)
+ */
+const REACTION_ORDER: ReactionContent[] = [
+  '+1',
+  'heart',
+  'hooray',
+  'rocket',
+  'eyes',
+  'laugh',
+  'confused',
+  '-1',
+];
+
+/**
+ * Extended reactions interface with viewer state
+ */
+interface ExtendedReactions extends GitHubReactions {
+  viewerReactions?: Partial<Record<ReactionContent, number>>;
+}
 
 /**
  * Format a date string to a relative time description
@@ -98,6 +140,159 @@ const Avatar: React.FC<{ user: GitHubIssueUser; size?: number }> = ({ user, size
         border: `1px solid ${theme.colors.border}`,
       }}
     />
+  );
+};
+
+/**
+ * ReactionBar component with interactive buttons
+ */
+interface ReactionBarProps {
+  reactions: ExtendedReactions;
+  onToggleReaction?: (type: ReactionContent, currentReactionId?: number) => void;
+  disabled?: boolean;
+}
+
+const ReactionBar: React.FC<ReactionBarProps> = ({ reactions, onToggleReaction, disabled }) => {
+  const { theme } = useTheme();
+  const [showPicker, setShowPicker] = useState(false);
+
+  const sortedReactions = REACTION_ORDER
+    .filter((type) => reactions[type] > 0)
+    .map((type) => ({
+      type,
+      count: reactions[type],
+      viewerReacted: !!reactions.viewerReactions?.[type],
+      reactionId: reactions.viewerReactions?.[type],
+    }));
+
+  const handleReactionClick = (type: ReactionContent, reactionId?: number) => {
+    if (disabled || !onToggleReaction) return;
+    onToggleReaction(type, reactionId);
+  };
+
+  const handlePickerSelect = (type: ReactionContent) => {
+    setShowPicker(false);
+    if (disabled || !onToggleReaction) return;
+    const reactionId = reactions.viewerReactions?.[type];
+    onToggleReaction(type, reactionId);
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap', position: 'relative' }}>
+      {sortedReactions.map(({ type, count, viewerReacted, reactionId }) => (
+        <button
+          key={type}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleReactionClick(type, reactionId);
+          }}
+          disabled={disabled}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            backgroundColor: viewerReacted ? `${theme.colors.primary}20` : theme.colors.backgroundSecondary,
+            border: `1px solid ${viewerReacted ? theme.colors.primary : theme.colors.border}`,
+            fontSize: theme.fontSizes[0],
+            cursor: disabled ? 'default' : 'pointer',
+            opacity: disabled ? 0.5 : 1,
+            transition: 'all 0.2s',
+          }}
+          title={viewerReacted ? 'Remove reaction' : 'Add reaction'}
+        >
+          <span>{REACTION_EMOJI[type]}</span>
+          <span style={{ fontFamily: theme.fonts.body, color: viewerReacted ? theme.colors.primary : theme.colors.textSecondary }}>{count}</span>
+        </button>
+      ))}
+
+      {/* Add reaction button */}
+      {onToggleReaction && (
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPicker(!showPicker);
+            }}
+            disabled={disabled}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '24px',
+              height: '24px',
+              borderRadius: '12px',
+              backgroundColor: theme.colors.backgroundSecondary,
+              border: `1px solid ${theme.colors.border}`,
+              fontSize: theme.fontSizes[1],
+              color: theme.colors.textMuted,
+              cursor: disabled ? 'default' : 'pointer',
+              opacity: disabled ? 0.5 : 1,
+              transition: 'all 0.2s',
+            }}
+            title="Add reaction"
+          >
+            +
+          </button>
+
+          {/* Emoji picker popover */}
+          {showPicker && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: 0,
+                marginBottom: '4px',
+                padding: '4px',
+                borderRadius: '8px',
+                backgroundColor: theme.colors.background,
+                border: `1px solid ${theme.colors.border}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                gap: '2px',
+                zIndex: 1000,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {REACTION_ORDER.map((type) => {
+                const viewerReacted = !!reactions.viewerReactions?.[type];
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePickerSelect(type);
+                    }}
+                    style={{
+                      padding: '4px',
+                      borderRadius: '4px',
+                      backgroundColor: viewerReacted ? `${theme.colors.primary}20` : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      transition: 'transform 0.2s',
+                    }}
+                    title={type}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.25)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    {REACTION_EMOJI[type]}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -165,9 +360,17 @@ const ReactionsDisplay: React.FC<{ reactions: GitHubReactions }> = ({ reactions 
 /**
  * Comment event component
  */
-const CommentEvent: React.FC<{ event: GitHubTimelineCommentEvent }> = ({ event }) => {
+const CommentEvent: React.FC<{
+  event: GitHubTimelineCommentEvent;
+  onToggleReaction?: (itemId: number, itemType: 'comment', reactionType: ReactionContent, currentReactionId?: number) => void;
+  getMergedReactions?: (itemId: number, itemType: 'comment', apiReactions?: GitHubReactions) => ExtendedReactions;
+}> = ({ event, onToggleReaction, getMergedReactions }) => {
   const { theme } = useTheme();
   const user = event.user || event.actor;
+
+  const mergedReactions = getMergedReactions
+    ? getMergedReactions(event.id, 'comment', event.reactions)
+    : event.reactions as ExtendedReactions;
 
   return (
     <div
@@ -239,7 +442,12 @@ const CommentEvent: React.FC<{ event: GitHubTimelineCommentEvent }> = ({ event }
             transparentBackground
           />
         </div>
-        {event.reactions && <ReactionsDisplay reactions={event.reactions} />}
+        {mergedReactions && (
+          <ReactionBar
+            reactions={mergedReactions}
+            onToggleReaction={onToggleReaction ? (type, reactionId) => onToggleReaction(event.id, 'comment', type, reactionId) : undefined}
+          />
+        )}
       </div>
     </div>
   );
@@ -366,7 +574,7 @@ const CommitEvent: React.FC<{ event: GitHubTimelineCommitEvent }> = ({ event }) 
         gap: '12px',
         padding: '12px 16px',
         borderBottom: `1px solid ${theme.colors.border}`,
-        backgroundColor: theme.colors.background,
+        backgroundColor: theme.colors.backgroundSecondary,
       }}
     >
       <div
@@ -693,8 +901,16 @@ const RefEvent: React.FC<{ event: GitHubTimelineRefEvent }> = ({ event }) => {
 /**
  * Inline review comment component
  */
-const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comment }) => {
+const InlineReviewComment: React.FC<{
+  comment: GitHubReviewComment;
+  onToggleReaction?: (itemId: number, itemType: 'review_comment', reactionType: ReactionContent, currentReactionId?: number) => void;
+  getMergedReactions?: (itemId: number, itemType: 'review_comment', apiReactions?: GitHubReactions) => ExtendedReactions;
+}> = ({ comment, onToggleReaction, getMergedReactions }) => {
   const { theme } = useTheme();
+
+  const mergedReactions = getMergedReactions
+    ? getMergedReactions(comment.id, 'review_comment', comment.reactions)
+    : comment.reactions as ExtendedReactions;
 
   return (
     <div
@@ -753,10 +969,26 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
             </span>
           )}
         </div>
+        <div
+          style={{
+            backgroundColor: theme.colors.background,
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: '6px',
+            overflow: 'hidden',
+            marginBottom: comment.diff_hunk ? '8px' : 0,
+          }}
+        >
+          <DocumentView
+            content={comment.body}
+            theme={theme}
+            maxWidth="100%"
+            transparentBackground
+          />
+        </div>
         {comment.diff_hunk && (
           <pre
             style={{
-              margin: '0 0 8px 0',
+              margin: 0,
               padding: '8px',
               backgroundColor: theme.colors.background,
               border: `1px solid ${theme.colors.border}`,
@@ -771,22 +1003,12 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
             {comment.diff_hunk}
           </pre>
         )}
-        <div
-          style={{
-            backgroundColor: theme.colors.background,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '6px',
-            overflow: 'hidden',
-          }}
-        >
-          <DocumentView
-            content={comment.body}
-            theme={theme}
-            maxWidth="100%"
-            transparentBackground
+        {mergedReactions && (
+          <ReactionBar
+            reactions={mergedReactions}
+            onToggleReaction={onToggleReaction ? (type, reactionId) => onToggleReaction(comment.id, 'review_comment', type, reactionId) : undefined}
           />
-        </div>
-        {comment.reactions && <ReactionsDisplay reactions={comment.reactions} />}
+        )}
       </div>
     </div>
   );
@@ -795,10 +1017,20 @@ const InlineReviewComment: React.FC<{ comment: GitHubReviewComment }> = ({ comme
 /**
  * Render a timeline event
  */
-const TimelineEventRenderer: React.FC<{ event: GitHubTimelineEvent }> = ({ event }) => {
+const TimelineEventRenderer: React.FC<{
+  event: GitHubTimelineEvent;
+  onToggleReaction?: (itemId: number, itemType: 'comment' | 'review' | 'review_comment', reactionType: ReactionContent, currentReactionId?: number) => void;
+  getMergedReactions?: (itemId: number, itemType: 'comment' | 'review' | 'review_comment', apiReactions?: GitHubReactions) => ExtendedReactions;
+}> = ({ event, onToggleReaction, getMergedReactions }) => {
   switch (event.event) {
     case 'commented':
-      return <CommentEvent event={event as GitHubTimelineCommentEvent} />;
+      return (
+        <CommentEvent
+          event={event as GitHubTimelineCommentEvent}
+          onToggleReaction={onToggleReaction}
+          getMergedReactions={getMergedReactions}
+        />
+      );
     case 'reviewed':
       return <ReviewEvent event={event as GitHubTimelineReviewEvent} />;
     case 'committed':
@@ -834,6 +1066,199 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
 
   // Panel container ref for focus management
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Delete confirmation modal state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Local state for reactions (optimistic updates)
+  const [localReactions, setLocalReactions] = useState<Record<string, ExtendedReactions>>({});
+
+  // Hidden messages state (persisted in localStorage)
+  const [hiddenMessages, setHiddenMessages] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('github-messages-hidden');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    }
+    return new Set();
+  });
+
+  // Toggle to show/hide reacted messages
+  const [showHiddenMessages, setShowHiddenMessages] = useState(false);
+
+  // Handle delete action
+  const handleDelete = () => {
+    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
+    const messagesData = messagesSlice?.data;
+
+    if (messagesData?.target && events) {
+      const { target, owner, repo } = messagesData;
+
+      // Emit delete event
+      (events as PanelEventEmitter).emit({
+        type: target.type === 'pull_request' ? 'github-pr:delete' : 'github-issue:delete',
+        source: 'github-messages-panel',
+        timestamp: Date.now(),
+        payload: {
+          owner,
+          repo,
+          number: target.number,
+        },
+      });
+    }
+
+    setShowDeleteConfirm(false);
+  };
+
+  // Toggle reaction (optimistic update + event emission)
+  const handleToggleReaction = useCallback((
+    itemId: string | number,
+    itemType: 'comment' | 'review' | 'review_comment',
+    reactionType: ReactionContent,
+    currentReactionId?: number
+  ) => {
+    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
+    const messagesData = messagesSlice?.data;
+
+    if (!messagesData?.target || !events) return;
+
+    const { owner, repo, target } = messagesData;
+    const key = `${itemType}-${itemId}`;
+
+    // Optimistic update to local state
+    setLocalReactions((prev) => {
+      const current: ExtendedReactions = prev[key] || {
+        url: '',
+        total_count: 0,
+        '+1': 0,
+        '-1': 0,
+        laugh: 0,
+        hooray: 0,
+        confused: 0,
+        heart: 0,
+        rocket: 0,
+        eyes: 0,
+        viewerReactions: {},
+      };
+
+      const updated: ExtendedReactions = { ...current };
+      const viewerReactions: Partial<Record<ReactionContent, number>> = { ...updated.viewerReactions };
+
+      if (currentReactionId) {
+        // Remove reaction
+        updated[reactionType] = Math.max(0, (updated[reactionType] || 0) - 1);
+        updated.total_count = Math.max(0, updated.total_count - 1);
+        delete viewerReactions[reactionType];
+      } else {
+        // Add reaction
+        updated[reactionType] = (updated[reactionType] || 0) + 1;
+        updated.total_count = (updated.total_count || 0) + 1;
+        viewerReactions[reactionType] = -1; // Temporary ID
+      }
+
+      updated.viewerReactions = viewerReactions;
+
+      return { ...prev, [key]: updated };
+    });
+
+    // Emit event to notify host
+    if (currentReactionId) {
+      (events as PanelEventEmitter).emit({
+        type: 'github-messages:reaction:remove',
+        source: 'github-messages-panel',
+        timestamp: Date.now(),
+        payload: {
+          owner,
+          repo,
+          targetType: target.type,
+          targetNumber: target.number,
+          itemType,
+          itemId,
+          reactionId: currentReactionId,
+        },
+      });
+    } else {
+      (events as PanelEventEmitter).emit({
+        type: 'github-messages:reaction:add',
+        source: 'github-messages-panel',
+        timestamp: Date.now(),
+        payload: {
+          owner,
+          repo,
+          targetType: target.type,
+          targetNumber: target.number,
+          itemType,
+          itemId,
+          reactionType,
+        },
+      });
+
+      // Auto-hide message after reacting (optional - can be configured)
+      setHiddenMessages((prev) => {
+        const next = new Set(prev);
+        next.add(key);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('github-messages-hidden', JSON.stringify([...next]));
+        }
+        return next;
+      });
+    }
+  }, [context, events]);
+
+  // Helper to merge API reactions with local optimistic updates
+  const getMergedReactions = useCallback((
+    itemId: string | number,
+    itemType: 'comment' | 'review' | 'review_comment',
+    apiReactions?: GitHubReactions
+  ): ExtendedReactions => {
+    const key = `${itemType}-${itemId}`;
+    const local = localReactions[key];
+
+    if (!apiReactions && !local) {
+      return {
+        url: '',
+        total_count: 0,
+        '+1': 0,
+        '-1': 0,
+        laugh: 0,
+        hooray: 0,
+        confused: 0,
+        heart: 0,
+        rocket: 0,
+        eyes: 0,
+        viewerReactions: {},
+      };
+    }
+
+    // Merge local optimistic updates with API data
+    if (local) {
+      return local;
+    }
+
+    return {
+      ...apiReactions!,
+      viewerReactions: {},
+    };
+  }, [localReactions]);
+
+  // Helper to merge timeline events and review comments, sorted by timestamp
+  const getMergedTimeline = useCallback((
+    timeline: GitHubTimelineEvent[],
+    reviewComments: GitHubReviewComment[]
+  ): Array<{ type: 'event' | 'review_comment'; data: GitHubTimelineEvent | GitHubReviewComment }> => {
+    const merged = [
+      ...timeline.map(event => ({ type: 'event' as const, data: event })),
+      ...reviewComments.map(comment => ({ type: 'review_comment' as const, data: comment })),
+    ];
+
+    // Sort by timestamp
+    merged.sort((a, b) => {
+      const timeA = a.type === 'event' ? getEventTimestamp(a.data as GitHubTimelineEvent) : (a.data as GitHubReviewComment).created_at;
+      const timeB = b.type === 'event' ? getEventTimestamp(b.data as GitHubTimelineEvent) : (b.data as GitHubReviewComment).created_at;
+      return new Date(timeA).getTime() - new Date(timeB).getTime();
+    });
+
+    return merged;
+  }, []);
 
   // Listen for panel focus events
   usePanelFocusListener(
@@ -998,31 +1423,150 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
       {/* Header */}
       <div
         style={{
-          height: '40px',
           minHeight: '40px',
-          padding: '0 12px',
+          padding: '8px 12px',
           borderBottom: `1px solid ${theme.colors.border}`,
           backgroundColor: theme.colors.backgroundSecondary,
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
           boxSizing: 'border-box',
+          flexWrap: 'wrap',
         }}
       >
-        {/* Title (truncated) */}
-        <span
+        {/* Labels */}
+        {target.labels && target.labels.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes[0],
+                color: theme.colors.textMuted,
+                fontWeight: 500,
+              }}
+            >
+              Tagged as
+            </span>
+            {target.labels.map((label) => (
+              <span
+                key={label.id}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  backgroundColor: `#${label.color}`,
+                  color: parseInt(label.color, 16) > 0x7fffff ? '#000' : '#fff',
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes[0],
+                  fontWeight: 500,
+                }}
+              >
+                {label.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Assignees */}
+        {target.assignees && target.assignees.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes[0],
+                color: theme.colors.textMuted,
+                fontWeight: 500,
+              }}
+            >
+              Assigned to
+            </span>
+            {target.assignees.map((assignee) => (
+              <div
+                key={assignee.login}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  backgroundColor: theme.colors.backgroundSecondary,
+                  border: `1px solid ${theme.colors.border}`,
+                }}
+              >
+                <img
+                  src={assignee.avatar_url}
+                  alt={assignee.login}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: theme.fonts.body,
+                    fontSize: theme.fontSizes[0],
+                    color: theme.colors.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  {assignee.login}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Toggle hidden messages button */}
+        {hiddenMessages.size > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowHiddenMessages(!showHiddenMessages)}
+            title={showHiddenMessages ? 'Hide reacted messages' : `Show ${hiddenMessages.size} hidden message${hiddenMessages.size > 1 ? 's' : ''}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              height: '28px',
+              padding: '0 8px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '6px',
+              backgroundColor: showHiddenMessages ? `${theme.colors.primary}20` : theme.colors.background,
+              color: showHiddenMessages ? theme.colors.primary : theme.colors.textSecondary,
+              cursor: 'pointer',
+              fontSize: theme.fontSizes[0],
+              fontFamily: theme.fonts.body,
+            }}
+          >
+            <EyeOff size={14} />
+            <span>{hiddenMessages.size}</span>
+          </button>
+        )}
+
+        {/* Delete button */}
+        <button
+          type="button"
+          onClick={() => setShowDeleteConfirm(true)}
+          title="Delete issue"
           style={{
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontFamily: theme.fonts.heading,
-            color: theme.colors.text,
-            fontSize: theme.fontSizes[1],
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            padding: 0,
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: '6px',
+            backgroundColor: theme.colors.background,
+            color: theme.colors.textSecondary,
+            cursor: 'pointer',
           }}
         >
-          {target.title}
-        </span>
+          <Trash2 size={14} />
+        </button>
 
         {/* External link */}
         <a
@@ -1069,33 +1613,183 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
           </div>
         ) : (
           <>
-            {timeline.map((event: GitHubTimelineEvent, index: number) => (
-              <TimelineEventRenderer key={`${event.event}-${index}`} event={event} />
-            ))}
-            {reviewComments.length > 0 && (
-              <>
-                <div
-                  style={{
-                    padding: '12px 16px',
-                    backgroundColor: theme.colors.backgroundSecondary,
-                    borderBottom: `1px solid ${theme.colors.border}`,
-                    fontFamily: theme.fonts.heading,
-                    fontWeight: 600,
-                    fontSize: theme.fontSizes[0],
-                    color: theme.colors.textSecondary,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Inline Review Comments ({reviewComments.length})
-                </div>
-                {reviewComments.map((comment: GitHubReviewComment) => (
-                  <InlineReviewComment key={comment.id} comment={comment} />
-                ))}
-              </>
-            )}
+            {getMergedTimeline(timeline, reviewComments)
+              .filter((item) => {
+                if (item.type === 'event') {
+                  const event = item.data as GitHubTimelineEvent;
+
+                  // Filter hidden reacted messages
+                  if (!showHiddenMessages && event.event === 'commented') {
+                    const key = `comment-${(event as GitHubTimelineCommentEvent).id}`;
+                    if (hiddenMessages.has(key)) return false;
+                  }
+
+                  // Always hide label events (current state shown in header)
+                  if (event.event === 'labeled' || event.event === 'unlabeled') {
+                    return false;
+                  }
+
+                  // Always hide assignment events (current state shown in header)
+                  if (event.event === 'assigned' || event.event === 'unassigned') {
+                    return false;
+                  }
+
+                  return true;
+                } else {
+                  // Filter hidden review comments
+                  const comment = item.data as GitHubReviewComment;
+                  if (!showHiddenMessages) {
+                    const key = `review_comment-${comment.id}`;
+                    if (hiddenMessages.has(key)) return false;
+                  }
+                  return true;
+                }
+              })
+              .map((item, index) => {
+                if (item.type === 'event') {
+                  const event = item.data as GitHubTimelineEvent;
+                  return (
+                    <TimelineEventRenderer
+                      key={`event-${event.event}-${index}`}
+                      event={event}
+                      onToggleReaction={handleToggleReaction}
+                      getMergedReactions={getMergedReactions}
+                    />
+                  );
+                } else {
+                  const comment = item.data as GitHubReviewComment;
+                  return (
+                    <InlineReviewComment
+                      key={`review-comment-${comment.id}`}
+                      comment={comment}
+                      onToggleReaction={handleToggleReaction}
+                      getMergedReactions={getMergedReactions}
+                    />
+                  );
+                }
+              })}
           </>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme.colors.background,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '8px',
+              padding: '24px',
+              minWidth: '320px',
+              maxWidth: '400px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: theme.colors.error ? `${theme.colors.error}20` : '#ef444420',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.colors.error || '#ef4444',
+                }}
+              >
+                <Trash2 size={20} />
+              </div>
+              <h3
+                style={{
+                  margin: 0,
+                  fontFamily: theme.fonts.heading,
+                  fontSize: theme.fontSizes[2],
+                  fontWeight: 600,
+                  color: theme.colors.text,
+                }}
+              >
+                Delete {target.type === 'pull_request' ? 'Pull Request' : 'Issue'}?
+              </h3>
+            </div>
+            <p
+              style={{
+                margin: '0 0 24px 0',
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.textSecondary,
+                lineHeight: 1.5,
+              }}
+            >
+              Are you sure you want to delete "{target.title}"? This action cannot be undone.
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: '6px',
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes[1],
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                style={{
+                  padding: '8px 16px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  backgroundColor: theme.colors.error || '#ef4444',
+                  color: '#ffffff',
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

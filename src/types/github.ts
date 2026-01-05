@@ -728,6 +728,10 @@ export interface GitHubMessagesTarget {
   user: GitHubIssueUser;
   created_at: string;
   html_url: string;
+  /** Labels on this issue/PR */
+  labels: GitHubIssueLabel[];
+  /** Users assigned to this issue/PR */
+  assignees: GitHubIssueUser[];
   /** For PRs: merge status */
   merged?: boolean;
   merged_at?: string | null;

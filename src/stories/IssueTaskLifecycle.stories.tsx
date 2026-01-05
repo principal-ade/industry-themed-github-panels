@@ -428,6 +428,8 @@ const IssueTaskLifecycleDemo: React.FC<{
             user: payload.issue.user,
             created_at: payload.issue.created_at,
             html_url: payload.issue.html_url,
+            labels: payload.issue.labels,
+            assignees: payload.issue.assignees,
           },
           timeline,
           reviewComments: [],
