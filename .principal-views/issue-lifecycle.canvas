@@ -1,0 +1,665 @@
+{
+  "pv": {
+    "name": "GitHub Issue Lifecycle",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "issues-panel",
+      "type": "text",
+      "text": "GitHub Issues Panel",
+      "x": 50,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "pv": {
+        "shape": "component",
+        "description": "Lists GitHub issues with filtering and search capabilities"
+      }
+    },
+    {
+      "id": "issue-detail-panel",
+      "type": "text",
+      "text": "Issue Detail Panel",
+      "x": 500,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "pv": {
+        "shape": "component",
+        "description": "Displays full issue details with action buttons (Create Task, Delete, Close)"
+      }
+    },
+    {
+      "id": "messages-panel",
+      "type": "text",
+      "text": "Messages Panel",
+      "x": 950,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "pv": {
+        "shape": "component",
+        "description": "Shows issue timeline, comments, and activity"
+      }
+    },
+    {
+      "id": "issue-selected-event",
+      "type": "text",
+      "text": "issue:selected",
+      "x": 50,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when user clicks an issue in the issues list"
+      }
+    },
+    {
+      "id": "load-timeline",
+      "type": "text",
+      "text": "Load Timeline Data",
+      "x": 300,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Loads timeline events and comments for the selected issue"
+      }
+    },
+    {
+      "id": "panel-focus-detail",
+      "type": "text",
+      "text": "panel:focus (detail)",
+      "x": 550,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Focuses the issue detail panel"
+      }
+    },
+    {
+      "id": "view-discussion-event",
+      "type": "text",
+      "text": "issue:view-discussion",
+      "x": 950,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when user clicks View Discussion button"
+      }
+    },
+    {
+      "id": "panel-focus-messages",
+      "type": "text",
+      "text": "panel:focus (messages)",
+      "x": 950,
+      "y": 450,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Focuses the messages panel"
+      }
+    },
+    {
+      "id": "create-task-action",
+      "type": "text",
+      "text": "Create Task",
+      "x": 50,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "action",
+        "description": "User clicks Create Task button (investigate or fix)"
+      }
+    },
+    {
+      "id": "issue-create-task-event",
+      "type": "text",
+      "text": "issue:create-task",
+      "x": 300,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Triggers task creation process"
+      }
+    },
+    {
+      "id": "build-task-markdown",
+      "type": "text",
+      "text": "Build Task Markdown",
+      "x": 550,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Generates task markdown from issue data"
+      }
+    },
+    {
+      "id": "write-to-backlog",
+      "type": "text",
+      "text": "Write to backlog.md",
+      "x": 800,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Appends task to backlog.md file"
+      }
+    },
+    {
+      "id": "git-commit",
+      "type": "text",
+      "text": "Git Commit",
+      "x": 1050,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Commits the new task to git"
+      }
+    },
+    {
+      "id": "add-label",
+      "type": "text",
+      "text": "Add Label to Issue",
+      "x": 1050,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Adds backlog-task:fix or backlog-task:investigate label"
+      }
+    },
+    {
+      "id": "github-api",
+      "type": "text",
+      "text": "GitHub API",
+      "x": 1300,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "system",
+        "description": "GitHub REST API for label updates"
+      }
+    },
+    {
+      "id": "task-created-event",
+      "type": "text",
+      "text": "issue:task-created",
+      "x": 800,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted after successful task creation"
+      }
+    },
+    {
+      "id": "refresh-detail-panel",
+      "type": "text",
+      "text": "Refresh Detail Panel",
+      "x": 550,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Updates detail panel to show new label"
+      }
+    },
+    {
+      "id": "delete-issue-action",
+      "type": "text",
+      "text": "Delete Issue",
+      "x": 50,
+      "y": 900,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "action",
+        "description": "User clicks delete/trash button in detail panel"
+      }
+    },
+    {
+      "id": "issue-delete-event",
+      "type": "text",
+      "text": "github-issue:delete",
+      "x": 300,
+      "y": 900,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Triggers issue deletion process"
+      }
+    },
+    {
+      "id": "remove-from-list",
+      "type": "text",
+      "text": "Remove from List",
+      "x": 550,
+      "y": 900,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Removes issue from the issues list"
+      }
+    },
+    {
+      "id": "issue-deselected-event",
+      "type": "text",
+      "text": "issue:deselected",
+      "x": 800,
+      "y": 900,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when issue is closed (X button) or after deletion"
+      }
+    },
+    {
+      "id": "clear-panels",
+      "type": "text",
+      "text": "Clear Detail & Messages",
+      "x": 1050,
+      "y": 900,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Clears messages and detail panels to empty state"
+      }
+    },
+    {
+      "id": "panel-focus-issues",
+      "type": "text",
+      "text": "panel:focus (issues)",
+      "x": 1050,
+      "y": 1050,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Refocuses the issues list panel"
+      }
+    },
+    {
+      "id": "view-task-event",
+      "type": "text",
+      "text": "task:view",
+      "x": 50,
+      "y": 1200,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when user clicks View Task button"
+      }
+    },
+    {
+      "id": "navigate-to-kanban",
+      "type": "text",
+      "text": "Navigate to Kanban",
+      "x": 300,
+      "y": 1200,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Navigates to kanban board or opens task file"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "fromNode": "issues-panel",
+      "toNode": "issue-selected-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "User clicks issue",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-2",
+      "fromNode": "issue-selected-event",
+      "toNode": "load-timeline",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Triggers",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-3",
+      "fromNode": "load-timeline",
+      "toNode": "panel-focus-detail",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Data loaded",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-4",
+      "fromNode": "panel-focus-detail",
+      "toNode": "issue-detail-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Shows issue",
+      "pv": {
+        "edgeType": "display"
+      }
+    },
+    {
+      "id": "edge-5",
+      "fromNode": "load-timeline",
+      "toNode": "messages-panel",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "label": "Updates timeline",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-6",
+      "fromNode": "issue-detail-panel",
+      "toNode": "view-discussion-event",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "View Discussion click",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-7",
+      "fromNode": "view-discussion-event",
+      "toNode": "panel-focus-messages",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Triggers focus",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-8",
+      "fromNode": "panel-focus-messages",
+      "toNode": "messages-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Focuses panel",
+      "pv": {
+        "edgeType": "display"
+      }
+    },
+    {
+      "id": "edge-9",
+      "fromNode": "issue-detail-panel",
+      "toNode": "create-task-action",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Create Task click",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-10",
+      "fromNode": "create-task-action",
+      "toNode": "issue-create-task-event",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Emits event",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-11",
+      "fromNode": "issue-create-task-event",
+      "toNode": "build-task-markdown",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Initiates",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-12",
+      "fromNode": "build-task-markdown",
+      "toNode": "write-to-backlog",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Markdown ready",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-13",
+      "fromNode": "write-to-backlog",
+      "toNode": "git-commit",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "File written",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-14",
+      "fromNode": "git-commit",
+      "toNode": "add-label",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Committed",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-15",
+      "fromNode": "add-label",
+      "toNode": "github-api",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "API call",
+      "pv": {
+        "edgeType": "call"
+      }
+    },
+    {
+      "id": "edge-16",
+      "fromNode": "add-label",
+      "toNode": "task-created-event",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Success",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-17",
+      "fromNode": "task-created-event",
+      "toNode": "refresh-detail-panel",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Refresh with label",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-18",
+      "fromNode": "refresh-detail-panel",
+      "toNode": "issue-detail-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Updates UI",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-19",
+      "fromNode": "issue-detail-panel",
+      "toNode": "delete-issue-action",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Delete click",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-20",
+      "fromNode": "delete-issue-action",
+      "toNode": "issue-delete-event",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Emits event",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-21",
+      "fromNode": "issue-delete-event",
+      "toNode": "remove-from-list",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Initiates",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-22",
+      "fromNode": "remove-from-list",
+      "toNode": "issue-deselected-event",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Triggers deselect",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-23",
+      "fromNode": "remove-from-list",
+      "toNode": "issues-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Updates list",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-24",
+      "fromNode": "issue-deselected-event",
+      "toNode": "clear-panels",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Triggers clear",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-25",
+      "fromNode": "clear-panels",
+      "toNode": "issue-detail-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Clears detail",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-26",
+      "fromNode": "clear-panels",
+      "toNode": "messages-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Clears messages",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-27",
+      "fromNode": "clear-panels",
+      "toNode": "panel-focus-issues",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "After clear",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-28",
+      "fromNode": "panel-focus-issues",
+      "toNode": "issues-panel",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "Refocus",
+      "pv": {
+        "edgeType": "display"
+      }
+    },
+    {
+      "id": "edge-29",
+      "fromNode": "issue-detail-panel",
+      "toNode": "view-task-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "View Task click",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-30",
+      "fromNode": "view-task-event",
+      "toNode": "navigate-to-kanban",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Navigate",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider } from '@principal-ade/industry-theme';
+import { ThemeProvider, theme as defaultTheme } from '@principal-ade/industry-theme';
 import { ResponsiveConfigurablePanelLayout } from '@principal-ade/panel-layouts';
 import { GitHubIssuesPanel } from '../panels/GitHubIssuesPanel';
 import { GitHubIssueDetailPanel } from '../panels/GitHubIssueDetailPanel';
@@ -657,45 +657,7 @@ const IssueTaskLifecycleDemo: React.FC<{
   return (
     <div style={{ height: '100vh', background: '#1a1a1a' }}>
       <ResponsiveConfigurablePanelLayout
-        theme={{
-          colors: {
-            text: '#e6e6e6',
-            background: '#1a1a1a',
-            primary: '#0969da',
-            secondary: '#656d76',
-            accent: '#8957e5',
-            highlight: '#ffd700',
-            muted: '#999999',
-            success: '#22c55e',
-            warning: '#f59e0b',
-            error: '#ef4444',
-            info: '#3b82f6',
-            border: '#333333',
-            surface: '#242424',
-            backgroundSecondary: '#2d2d2d',
-            backgroundTertiary: '#363636',
-            backgroundLight: '#404040',
-            backgroundHover: '#2a2a2a',
-            textSecondary: '#a0a0a0',
-            textTertiary: '#808080',
-            textMuted: '#999999',
-            textOnPrimary: '#ffffff',
-          },
-          fonts: {
-            body: 'system-ui, -apple-system, sans-serif',
-            heading: 'system-ui, -apple-system, sans-serif',
-            monospace: 'ui-monospace, monospace',
-          },
-          fontSizes: [11, 12, 14, 16, 20, 24, 32, 48],
-          fontWeights: {
-            body: 400,
-            heading: 600,
-            bold: 700,
-            light: 300,
-            medium: 500,
-            semibold: 600,
-          },
-        }}
+        theme={defaultTheme}
         panels={panels}
         layout={layout}
         defaultSizes={
