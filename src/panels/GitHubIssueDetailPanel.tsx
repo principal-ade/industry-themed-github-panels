@@ -12,8 +12,12 @@ import {
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
-import type { PanelComponentProps, PanelEventEmitter } from '../types';
-import type { GitHubIssue, IssueSelectedEventPayload } from '../types/github';
+import type { PanelEventEmitter } from '../types';
+import type {
+  GitHubIssue,
+  IssueSelectedEventPayload,
+  GitHubIssueDetailPanelProps,
+} from '../types/github';
 
 /** Task creation status for an issue */
 type TaskCreationStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -47,7 +51,7 @@ const formatDate = (dateString: string): string => {
 /**
  * GitHubIssueDetailPanelContent - Internal component that uses theme
  */
-const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }) => {
+const GitHubIssueDetailPanelContent: React.FC<GitHubIssueDetailPanelProps> = ({ events }) => {
   const { theme } = useTheme();
   const [selectedIssue, setSelectedIssue] = useState<GitHubIssue | null>(null);
   const [owner, setOwner] = useState<string>('');
@@ -1150,7 +1154,7 @@ const GitHubIssueDetailPanelContent: React.FC<PanelComponentProps> = ({ events }
  *
  * Listens for 'issue:selected' events from other panels (e.g., GitHubIssuesPanel)
  */
-export const GitHubIssueDetailPanel: React.FC<PanelComponentProps> = (props) => {
+export const GitHubIssueDetailPanel: React.FC<GitHubIssueDetailPanelProps> = (props) => {
   return <GitHubIssueDetailPanelContent {...props} />;
 };
 

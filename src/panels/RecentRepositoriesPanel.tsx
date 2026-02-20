@@ -14,8 +14,11 @@ import {
   BookOpen,
 } from 'lucide-react';
 
-import type { PanelComponentProps } from '../types';
-import type { GitHubRepository, RepositoryPreviewEventPayload } from '../types/github';
+import type {
+  GitHubRepository,
+  RepositoryPreviewEventPayload,
+  RecentRepositoriesPanelProps,
+} from '../types/github';
 
 const STORAGE_KEY = 'recent-repositories';
 const OWNERS_STORAGE_KEY = 'recent-owners';
@@ -196,7 +199,7 @@ export function addRecentOwner(owner: OwnerInfo): void {
 /**
  * RecentRepositoriesPanelContent - Internal component that uses theme
  */
-const RecentRepositoriesPanelContent: React.FC<PanelComponentProps & {
+const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
   onNavigate?: (path: string) => void;
 }> = ({
   events,
@@ -867,7 +870,7 @@ const RecentRepositoriesPanelContent: React.FC<PanelComponentProps & {
  * - Click to preview, double-click to open
  * - Remove individual items or clear all history
  */
-export const RecentRepositoriesPanel: React.FC<PanelComponentProps & {
+export const RecentRepositoriesPanel: React.FC<RecentRepositoriesPanelProps & {
   onNavigate?: (path: string) => void;
 }> = (props) => {
   return <RecentRepositoriesPanelContent {...props} />;

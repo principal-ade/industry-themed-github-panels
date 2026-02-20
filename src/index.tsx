@@ -12,7 +12,7 @@ import { githubTools, githubToolsMetadata } from './tools';
  * Export array of panel definitions.
  * This is the required export for panel extensions.
  */
-export const panels: PanelDefinition[] = [
+export const panels: PanelDefinition<any, any>[] = [
   {
     metadata: {
       ...GitHubProjectsPanelMetadata,
@@ -25,7 +25,7 @@ export const panels: PanelDefinition[] = [
       console.log('GitHub Projects Panel mounted');
 
       // Refresh GitHub data if available
-      const slice = context.getSlice('github-repositories');
+      const slice = context.getSlice('githubRepositories');
       if (slice && !slice.loading) {
         await slice.refresh();
       }
@@ -59,7 +59,7 @@ export const panels: PanelDefinition[] = [
       console.log('GitHub Issues Panel mounted');
 
       // Refresh issues data if available
-      const slice = context.getSlice('github-issues');
+      const slice = context.getSlice('githubIssues');
       if (slice && !slice.loading) {
         await slice.refresh();
       }

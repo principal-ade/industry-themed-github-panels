@@ -13,11 +13,11 @@ import {
   Plus,
 } from 'lucide-react';
 
-import type { PanelComponentProps } from '../types';
 import type {
   GitHubIssue,
   GitHubIssuesSliceData,
   IssueSelectedEventPayload,
+  GitHubIssuesPanelProps,
 } from '../types/github';
 import { CreateIssueModal } from '../components/CreateIssueModal';
 
@@ -44,7 +44,7 @@ const formatDate = (dateString: string): string => {
 /**
  * GitHubIssuesPanelContent - Internal component that uses theme
  */
-const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
+const GitHubIssuesPanelContent: React.FC<GitHubIssuesPanelProps> = ({
   context,
   events,
 }) => {
@@ -58,10 +58,10 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
     () => panelRef.current?.focus()
   );
 
-  // Get issues from data slice
-  const issuesSlice = context.getSlice<GitHubIssuesSliceData>('github-issues');
-  const isLoading = context.isSliceLoading('github-issues');
-  const hasData = context.hasSlice('github-issues');
+  // Get issues from data slice (now with direct typed access)
+  const { githubIssues: issuesSlice } = context;
+  const isLoading = issuesSlice?.loading ?? false;
+  const hasData = !!issuesSlice;
 
   const issues = issuesSlice?.data?.issues ?? [];
   const owner = issuesSlice?.data?.owner ?? '';
@@ -667,7 +667,7 @@ const GitHubIssuesPanelContent: React.FC<PanelComponentProps> = ({
  * - Emits 'issue:selected' event for detail panel
  * - External links to GitHub
  */
-export const GitHubIssuesPanel: React.FC<PanelComponentProps> = (props) => {
+export const GitHubIssuesPanel: React.FC<GitHubIssuesPanelProps> = (props) => {
   return <GitHubIssuesPanelContent {...props} />;
 };
 
@@ -680,6 +680,6 @@ export const GitHubIssuesPanelMetadata = {
   description: 'View and manage GitHub repository issues',
   icon: 'circle-dot',
   version: '0.1.0',
-  slices: ['github-issues'],
+  slices: ['githubIssues'], // Typed context slice declaration
   surfaces: ['panel'],
 };

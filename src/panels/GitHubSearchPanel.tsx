@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '@principal-ade/industry-theme';
 import { Search, Github, X, AlertCircle } from 'lucide-react';
 
-import type { PanelComponentProps } from '../types';
 import type {
   GitHubRepository,
   RepositoryPreviewEventPayload,
   WorkspaceCollectionSlice,
   WorkspaceRepositoriesSlice,
   GitHubSearchPanelActions,
+  GitHubSearchPanelProps,
 } from '../types/github';
 import { GitHubRepositoryCard } from '../components/shared';
 
@@ -25,7 +25,7 @@ const createPanelEvent = <T,>(type: string, payload: T) => ({
 /**
  * GitHubSearchPanelContent - Internal component that uses theme
  */
-const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
+const GitHubSearchPanelContent: React.FC<GitHubSearchPanelProps> = ({ context, actions, events }) => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<GitHubRepository[]>([]);
@@ -36,9 +36,8 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Get workspace/collection context for "Add to Collection" functionality
-  const workspaceSlice = context.getSlice<WorkspaceCollectionSlice>('workspace');
-  const workspaceReposSlice = context.getSlice<WorkspaceRepositoriesSlice>('workspaceRepositories');
+  // Get workspace/collection context for "Add to Collection" functionality (now with direct typed access)
+  const { workspace: workspaceSlice, workspaceRepositories: workspaceReposSlice } = context;
 
   // Collection context
   const currentWorkspace = workspaceSlice?.data?.workspace;
@@ -384,7 +383,7 @@ const GitHubSearchPanelContent: React.FC<PanelComponentProps> = ({ context, acti
  * Optional actions:
  * - addToCollection: (repo) => Promise<void>
  */
-export const GitHubSearchPanel: React.FC<PanelComponentProps> = (props) => {
+export const GitHubSearchPanel: React.FC<GitHubSearchPanelProps> = (props) => {
   return <GitHubSearchPanelContent {...props} />;
 };
 

@@ -258,7 +258,7 @@ export interface WorkspaceRepositoriesSlice {
 /**
  * Actions for panels with addToCollection functionality
  */
-export interface CollectionPanelActions {
+export interface CollectionPanelActions extends PanelActions {
   /** Add a repository to the current collection/workspace */
   addToCollection?: (repo: GitHubRepository) => Promise<void>;
 }
@@ -820,3 +820,149 @@ export interface CommentErrorEventPayload {
   targetNumber: number;
   error: string;
 }
+
+// ============================================================================
+// Panel-specific typed interfaces (v0.4.2 migration)
+// ============================================================================
+
+import type { PanelActions, PanelComponentProps, DataSlice } from '@principal-ade/panel-framework-core';
+
+/**
+ * Actions for GitHubProjectsPanel
+ * This panel doesn't require any actions - it only reads from slices and emits events
+ */
+export type GitHubProjectsPanelActions = PanelActions;
+
+/**
+ * Context for GitHubProjectsPanel
+ */
+export interface GitHubProjectsPanelContext {
+  githubRepositories: DataSlice<GitHubRepositoriesSliceData>;
+}
+
+/**
+ * Typed props for GitHubProjectsPanel
+ */
+export type GitHubProjectsPanelProps = PanelComponentProps<
+  GitHubProjectsPanelActions,
+  GitHubProjectsPanelContext
+>;
+
+/**
+ * Context for GitHubSearchPanel
+ */
+export interface GitHubSearchPanelContext {
+  workspace?: DataSlice<WorkspaceCollectionSlice>;
+  workspaceRepositories?: DataSlice<WorkspaceRepositoriesSlice>;
+}
+
+/**
+ * Typed props for GitHubSearchPanel
+ */
+export type GitHubSearchPanelProps = PanelComponentProps<
+  GitHubSearchPanelActions,
+  GitHubSearchPanelContext
+>;
+
+/**
+ * Actions for GitHubIssuesPanel
+ * This panel doesn't require any actions - it only reads from slices and emits events
+ */
+export type GitHubIssuesPanelActions = PanelActions;
+
+/**
+ * Context for GitHubIssuesPanel
+ */
+export interface GitHubIssuesPanelContext {
+  githubIssues: DataSlice<GitHubIssuesSliceData>;
+}
+
+/**
+ * Typed props for GitHubIssuesPanel
+ */
+export type GitHubIssuesPanelProps = PanelComponentProps<
+  GitHubIssuesPanelActions,
+  GitHubIssuesPanelContext
+>;
+
+/**
+ * Actions for GitHubMessagesPanel
+ * This panel doesn't require any actions - it only reads from slices and emits events
+ */
+export type GitHubMessagesPanelActions = PanelActions;
+
+/**
+ * Context for GitHubMessagesPanel
+ */
+export interface GitHubMessagesPanelContext {
+  githubMessages: DataSlice<GitHubMessagesSliceData>;
+}
+
+/**
+ * Typed props for GitHubMessagesPanel
+ */
+export type GitHubMessagesPanelProps = PanelComponentProps<
+  GitHubMessagesPanelActions,
+  GitHubMessagesPanelContext
+>;
+
+/**
+ * Actions for OwnerRepositoriesPanel
+ * This panel doesn't require any actions - it only reads from slices and emits events
+ */
+export type OwnerRepositoriesPanelActions = PanelActions;
+
+/**
+ * Context for OwnerRepositoriesPanel
+ */
+export interface OwnerRepositoriesPanelContext {
+  ownerRepositories: DataSlice<OwnerRepositoriesSliceData>;
+}
+
+/**
+ * Typed props for OwnerRepositoriesPanel (extends base props with owner prop)
+ */
+export type OwnerRepositoriesPanelPropsTyped = PanelComponentProps<
+  OwnerRepositoriesPanelActions,
+  OwnerRepositoriesPanelContext
+>;
+
+/**
+ * Actions for GitHubIssueDetailPanel
+ * This panel is event-driven and doesn't use slices or actions
+ */
+export type GitHubIssueDetailPanelActions = PanelActions;
+
+/**
+ * Context for GitHubIssueDetailPanel
+ * This panel is event-driven and doesn't use context slices
+ */
+export type GitHubIssueDetailPanelContext = {};
+
+/**
+ * Typed props for GitHubIssueDetailPanel
+ */
+export type GitHubIssueDetailPanelProps = PanelComponentProps<
+  GitHubIssueDetailPanelActions,
+  GitHubIssueDetailPanelContext
+>;
+
+/**
+ * Actions for RecentRepositoriesPanel
+ * This panel uses localStorage and doesn't require actions or slices
+ */
+export type RecentRepositoriesPanelActions = PanelActions;
+
+/**
+ * Context for RecentRepositoriesPanel
+ * This panel uses localStorage and doesn't require context slices
+ */
+export type RecentRepositoriesPanelContext = {};
+
+/**
+ * Typed props for RecentRepositoriesPanel
+ */
+export type RecentRepositoriesPanelProps = PanelComponentProps<
+  RecentRepositoriesPanelActions,
+  RecentRepositoriesPanelContext
+>;

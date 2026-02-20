@@ -11,13 +11,17 @@ import {
   X,
 } from 'lucide-react';
 
-import type { PanelComponentProps } from '../types';
-import type { GitHubRepository, RepositoryPreviewEventPayload, OwnerRepositoriesSliceData } from '../types/github';
+import type {
+  GitHubRepository,
+  RepositoryPreviewEventPayload,
+  OwnerRepositoriesSliceData,
+  OwnerRepositoriesPanelPropsTyped,
+} from '../types/github';
 
 type SortField = 'name' | 'updated';
 type SortOrder = 'asc' | 'desc';
 
-export interface OwnerRepositoriesPanelProps extends PanelComponentProps {
+export interface OwnerRepositoriesPanelProps extends OwnerRepositoriesPanelPropsTyped {
   owner?: string;
   selectedRepository?: string; // full_name like "owner/repo"
   /** Whether to show the search bar by default */
@@ -58,9 +62,9 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
   // Get owner from prop or context
   const owner = propOwner || (context?.currentScope?.repository as { name?: string })?.name;
 
-  // Get owner repositories slice
-  const ownerSlice = context.getSlice<OwnerRepositoriesSliceData>('owner-repositories');
-  const isLoading = context.isSliceLoading('owner-repositories');
+  // Get owner repositories slice (now with direct typed access)
+  const { ownerRepositories: ownerSlice } = context;
+  const isLoading = ownerSlice?.loading ?? false;
 
   const ownerInfo = ownerSlice?.data?.owner ?? null;
   const repositories = ownerSlice?.data?.repositories ?? [];
@@ -719,6 +723,6 @@ export const OwnerRepositoriesPanelMetadata = {
   description: 'Browse repositories for a GitHub user or organization',
   icon: 'github',
   version: '0.2.0',
-  slices: ['owner-repositories'],
+  slices: ['ownerRepositories'], // Typed context slice declaration
   surfaces: ['panel'],
 };

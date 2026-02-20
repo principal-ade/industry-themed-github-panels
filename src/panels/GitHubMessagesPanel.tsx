@@ -22,9 +22,10 @@ import {
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
-import type { PanelComponentProps, PanelEventEmitter } from '../types';
+import type { PanelEventEmitter } from '../types';
 import type {
   GitHubMessagesSliceData,
+  GitHubMessagesPanelProps,
   GitHubTimelineEvent,
   GitHubTimelineCommentEvent,
   GitHubTimelineReviewEvent,
@@ -1143,7 +1144,9 @@ const TimelineEventRenderer: React.FC<{
 /**
  * GitHubMessagesPanelContent - Internal component that uses theme
  */
-const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, events }) => {
+const GitHubMessagesPanelContent: React.FC<GitHubMessagesPanelProps> = ({ context, events }) => {
+  // Get messages slice (now with direct typed access)
+  const { githubMessages: messagesSlice } = context;
   const { theme } = useTheme();
 
   // Panel container ref for focus management
@@ -1175,7 +1178,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
 
   // Handle delete action
   const handleDelete = () => {
-    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
     const messagesData = messagesSlice?.data;
 
     if (messagesData?.target && events) {
@@ -1204,7 +1206,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
     reactionType: ReactionContent,
     currentReactionId?: number
   ) => {
-    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
     const messagesData = messagesSlice?.data;
 
     if (!messagesData?.target || !events) return;
@@ -1294,7 +1295,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
 
   // Handle sending comment
   const handleSendComment = useCallback(() => {
-    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
     const messagesData = messagesSlice?.data;
 
     if (!events || !messagesData?.target || !commentText.trim() || isSending) return;
@@ -1384,9 +1384,8 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   );
 
   // Get messages data from slice - reads directly, no events for data updates
-  const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
-  const isLoading = context.isSliceLoading('github-messages');
-  const hasData = context.hasSlice('github-messages');
+  const isLoading = messagesSlice?.loading ?? false;
+  const hasData = !!messagesSlice;
 
   const messagesData = messagesSlice?.data;
 
@@ -1456,7 +1455,6 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
   useEffect(() => {
     if (!events) return;
 
-    const messagesSlice = context.getSlice<GitHubMessagesSliceData>('github-messages');
     const messagesData = messagesSlice?.data;
 
     const unsubscribers = [
@@ -2085,7 +2083,7 @@ const GitHubMessagesPanelContent: React.FC<PanelComponentProps> = ({ context, ev
  * Requests data via 'github-messages:request' event
  * Receives data from 'github-messages' data slice
  */
-export const GitHubMessagesPanel: React.FC<PanelComponentProps> = (props) => {
+export const GitHubMessagesPanel: React.FC<GitHubMessagesPanelProps> = (props) => {
   return <GitHubMessagesPanelContent {...props} />;
 };
 
@@ -2098,6 +2096,6 @@ export const GitHubMessagesPanelMetadata = {
   description: 'View conversation threads for GitHub issues and pull requests',
   icon: 'message-square',
   version: '0.1.0',
-  slices: ['github-messages'],
+  slices: ['githubMessages'], // Typed context slice declaration
   surfaces: ['panel'],
 };

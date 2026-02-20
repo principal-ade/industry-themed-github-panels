@@ -11,11 +11,11 @@ import {
   Building2,
 } from 'lucide-react';
 
-import type { PanelComponentProps } from '../types';
 import type {
   GitHubRepositoriesSliceData,
   GitHubRepository,
   RepositoryPreviewEventPayload,
+  GitHubProjectsPanelProps,
 } from '../types/github';
 import { GitHubProjectCard } from '../components/GitHubProjectCard';
 
@@ -121,7 +121,7 @@ const Section: React.FC<SectionProps> = ({
 /**
  * GitHubProjectsPanelContent - Internal component that uses theme
  */
-const GitHubProjectsPanelContent: React.FC<PanelComponentProps> = ({
+const GitHubProjectsPanelContent: React.FC<GitHubProjectsPanelProps> = ({
   context,
   events,
 }) => {
@@ -134,12 +134,12 @@ const GitHubProjectsPanelContent: React.FC<PanelComponentProps> = ({
     new Set(['owned', 'starred'])
   );
 
-  // Get GitHub repositories slice
-  const githubSlice = context.getSlice<GitHubRepositoriesSliceData>('github-repositories');
-  const isLoading = context.isSliceLoading('github-repositories');
-  const hasData = context.hasSlice('github-repositories');
+  // Get GitHub repositories slice (now with direct typed access)
+  const { githubRepositories } = context;
+  const isLoading = githubRepositories?.loading ?? false;
+  const hasData = !!githubRepositories;
 
-  const data = githubSlice?.data;
+  const data = githubRepositories?.data;
 
   // Observe container width for responsive layout
   useEffect(() => {
@@ -532,7 +532,7 @@ const GitHubProjectsPanelContent: React.FC<PanelComponentProps> = ({
  *
  * Required data slice: 'github-repositories' (GitHubRepositoriesSliceData)
  */
-export const GitHubProjectsPanel: React.FC<PanelComponentProps> = (props) => {
+export const GitHubProjectsPanel: React.FC<GitHubProjectsPanelProps> = (props) => {
   return <GitHubProjectsPanelContent {...props} />;
 };
 
@@ -545,6 +545,6 @@ export const GitHubProjectsPanelMetadata = {
   description: 'Browse and manage your GitHub repositories',
   icon: 'github',
   version: '0.1.0',
-  slices: ['github-repositories'],
+  slices: ['githubRepositories'], // Typed context slice declaration
   surfaces: ['sidebar', 'panel'],
 };
