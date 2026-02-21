@@ -202,6 +202,10 @@ export type {
   GitHubMessagesTarget,
   GitHubMessagesSliceData,
   MessagesRequestEventPayload,
+  // Owner and Workspace types
+  OwnerRepositoriesSliceData,
+  WorkspaceRepositoriesSlice,
+  GitHubWorkspaceRepositoriesSlice,
 } from './types/github';
 
 // Export helper functions

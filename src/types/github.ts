@@ -5,6 +5,8 @@
  * and events emitted by the GitHub Projects panel.
  */
 
+import type { AlexandriaEntry } from '@principal-ai/alexandria-core-library';
+
 /**
  * GitHub Repository owner information
  */
@@ -17,39 +19,50 @@ export interface GitHubOwner {
 /**
  * GitHub Repository data structure
  * Matches the GitHub API response format
+ *
+ * NOTE: This type is duplicated from @industry-theme/alexandria-panels/src/panels/shared/github-types.ts
+ * TODO: Centralize this type in a shared package to avoid drift between implementations
+ * Copied from: /Users/griever/Developer/web-ade/industry-themed-alexandria-entry-panels
+ * Extended with additional properties used by github-panels
  */
 export interface GitHubRepository {
   id: number;
   name: string;
   full_name: string;
-  owner: GitHubOwner;
+  owner: {
+    login: string;
+    avatar_url: string;
+    type?: 'User' | 'Organization'; // Extended for github-panels
+  };
   private: boolean;
   html_url: string;
   description: string | null;
-  fork: boolean;
   clone_url: string;
-  ssh_url?: string;
-  language: string | null;
-  default_branch: string;
-  stargazers_count?: number;
-  forks_count?: number;
-  watchers_count?: number;
-  open_issues_count?: number;
-  updated_at?: string;
+  updated_at: string;
   pushed_at?: string;
-  created_at?: string;
-  topics?: string[];
-  archived?: boolean;
-  disabled?: boolean;
-  visibility?: 'public' | 'private' | 'internal';
-  /** License information from GitHub API (can be string for backwards compat or full object) */
-  license?: string | {
-    key: string;
-    name: string;
-    spdx_id: string;
-    url: string;
-    node_id: string;
-  } | null;
+  language: string | null;
+  stargazers_count?: number;
+  forks_count?: number; // Extended for github-panels
+  watchers_count?: number; // Extended for github-panels
+  open_issues_count?: number; // Extended for github-panels
+  default_branch: string;
+  fork?: boolean;
+  archived?: boolean; // Extended for github-panels
+  disabled?: boolean; // Extended for github-panels
+  visibility?: 'public' | 'private' | 'internal'; // Extended for github-panels
+  created_at?: string; // Extended for github-panels
+  ssh_url?: string; // Extended for github-panels
+  topics?: string[]; // Extended for github-panels
+  /** Parent repository info (for forks) */
+  parent?: {
+    full_name: string;
+    owner: {
+      login: string;
+      avatar_url: string;
+    };
+  };
+  /** License information - simplified to string or null for compatibility */
+  license?: string | { spdx_id: string; name: string } | null;
 }
 
 /**
@@ -243,11 +256,27 @@ export interface WorkspaceCollectionSlice {
 }
 
 /**
- * Data slice for workspace repositories
- * Contains GitHub repository data for repos in the workspace
+ * Data slice for workspace repositories (local)
+ * Contains repository data for repos in the workspace
+ * NOTE: This duplicates the type from @industry-theme/alexandria-panels
+ * temporarily until we centralize workspace types
  */
 export interface WorkspaceRepositoriesSlice {
   /** Repositories in the workspace */
+  repositories: AlexandriaEntry[];
+  /** Loading state */
+  loading: boolean;
+  /** Error message if loading failed */
+  error?: string;
+}
+
+/**
+ * Data slice for workspace collection repositories (web/GitHub)
+ * Contains GitHub repository data for repos in the workspace collection
+ * Used by web-based panels that work with GitHub repositories
+ */
+export interface GitHubWorkspaceRepositoriesSlice {
+  /** GitHub repositories in the workspace */
   repositories: GitHubRepository[];
   /** Loading state */
   loading: boolean;
@@ -853,7 +882,7 @@ export type GitHubProjectsPanelProps = PanelComponentProps<
  */
 export interface GitHubSearchPanelContext {
   workspace?: DataSlice<WorkspaceCollectionSlice>;
-  workspaceRepositories?: DataSlice<WorkspaceRepositoriesSlice>;
+  workspaceRepositories?: DataSlice<GitHubWorkspaceRepositoriesSlice>;
 }
 
 /**

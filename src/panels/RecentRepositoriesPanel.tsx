@@ -66,6 +66,7 @@ type RecentItem = RecentRepository | RecentOwner;
  * Load recent repositories from localStorage
  */
 function loadRecentRepositories(): RecentRepository[] {
+  if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -83,6 +84,7 @@ function loadRecentRepositories(): RecentRepository[] {
  * Load recent owners from localStorage
  */
 function loadRecentOwners(): RecentOwner[] {
+  if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(OWNERS_STORAGE_KEY);
     if (stored) {
@@ -98,6 +100,7 @@ function loadRecentOwners(): RecentOwner[] {
  * Save recent repositories to localStorage
  */
 function saveRecentRepositories(repos: RecentRepository[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(repos));
   } catch (err) {
@@ -109,6 +112,7 @@ function saveRecentRepositories(repos: RecentRepository[]): void {
  * Save recent owners to localStorage
  */
 function saveRecentOwners(owners: RecentOwner[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(OWNERS_STORAGE_KEY, JSON.stringify(owners));
   } catch (err) {
@@ -148,7 +152,9 @@ export function addRecentRepository(repo: GitHubRepository): void {
   saveRecentRepositories(updated);
 
   // Dispatch event so panels can update
-  window.dispatchEvent(new CustomEvent('recent-items-updated'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('recent-items-updated'));
+  }
 }
 
 /**
@@ -193,7 +199,9 @@ export function addRecentOwner(owner: OwnerInfo): void {
   saveRecentOwners(updated);
 
   // Dispatch event so panels can update
-  window.dispatchEvent(new CustomEvent('recent-items-updated'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('recent-items-updated'));
+  }
 }
 
 /**
@@ -285,7 +293,7 @@ const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
       full_name: repo.full_name,
       owner: {
         login: repo.owner.login,
-        avatar_url: repo.owner.avatar_url,
+        avatar_url: repo.owner.avatar_url || `https://github.com/${repo.owner.login}.png`,
       },
       private: false,
       html_url: repo.html_url,
@@ -294,6 +302,7 @@ const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
       clone_url: `https://github.com/${repo.full_name}.git`,
       language: repo.language,
       default_branch: 'main',
+      updated_at: new Date().toISOString(),
       stargazers_count: repo.stargazers_count,
       forks_count: repo.forks_count,
     };
@@ -320,7 +329,7 @@ const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
         full_name: repo.full_name,
         owner: {
           login: repo.owner.login,
-          avatar_url: repo.owner.avatar_url,
+          avatar_url: repo.owner.avatar_url || `https://github.com/${repo.owner.login}.png`,
         },
         private: false,
         html_url: repo.html_url,
@@ -329,6 +338,7 @@ const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
         clone_url: `https://github.com/${repo.full_name}.git`,
         language: repo.language,
         default_branch: 'main',
+        updated_at: new Date().toISOString(),
         stargazers_count: repo.stargazers_count,
         forks_count: repo.forks_count,
       };
