@@ -124,6 +124,12 @@ function saveRecentOwners(owners: RecentOwner[]): void {
  * Add a repository to the recent list
  */
 export function addRecentRepository(repo: GitHubRepository): void {
+  // Validate required fields to prevent undefined key issues
+  if (repo.id == null) {
+    console.warn('addRecentRepository: skipping repository without valid id', repo.full_name);
+    return;
+  }
+
   const recent = loadRecentRepositories();
 
   // Remove if already exists
@@ -175,6 +181,12 @@ export interface OwnerInfo {
  * Add an owner to the recent list
  */
 export function addRecentOwner(owner: OwnerInfo): void {
+  // Validate required fields to prevent undefined key issues
+  if (owner.id == null) {
+    console.warn('addRecentOwner: skipping owner without valid id', owner.login);
+    return;
+  }
+
   const recent = loadRecentOwners();
 
   // Remove if already exists
@@ -227,8 +239,9 @@ const RecentRepositoriesPanelContent: React.FC<RecentRepositoriesPanelProps & {
   // Load and merge items on mount
   useEffect(() => {
     const loadItems = () => {
-      const repos = loadRecentRepositories();
-      const owners = loadRecentOwners();
+      // Filter out items with undefined IDs to prevent duplicate key warnings
+      const repos = loadRecentRepositories().filter(r => r.id != null);
+      const owners = loadRecentOwners().filter(o => o.id != null);
 
       // Merge and sort by visitedAt
       const merged: RecentItem[] = [...repos, ...owners].sort(
