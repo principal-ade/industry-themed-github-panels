@@ -15,7 +15,6 @@ import {
 
 import type {
   GitHubIssue,
-  GitHubIssuesSliceData,
   IssueSelectedEventPayload,
   GitHubIssuesPanelProps,
 } from '../types/github';

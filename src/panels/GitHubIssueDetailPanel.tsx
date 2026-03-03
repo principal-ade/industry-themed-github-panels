@@ -283,7 +283,6 @@ const GitHubIssueDetailPanelContent: React.FC<GitHubIssueDetailPanelProps> = ({ 
     label.name === 'backlog-task:investigate' || label.name === 'backlog-task:fix'
   );
   const hasTask = !!taskLabel;
-  const taskType = taskLabel?.name.split(':')[1] as 'investigate' | 'fix' | undefined;
 
   return (
     <div ref={panelRef} tabIndex={-1} style={{ ...containerStyle, outline: 'none' }}>

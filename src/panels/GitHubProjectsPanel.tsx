@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 
 import type {
-  GitHubRepositoriesSliceData,
   GitHubRepository,
   RepositoryPreviewEventPayload,
   GitHubProjectsPanelProps,

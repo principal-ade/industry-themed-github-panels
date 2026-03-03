@@ -203,19 +203,8 @@ const createIssuesContext = (
     },
   };
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('github-issues', issuesSlice as DataSlice);
-
   return createMockContext({
-    slices,
-    getSlice: <T,>(name: string) => {
-      if (name === 'github-issues') {
-        return issuesSlice as unknown as DataSlice<T>;
-      }
-      return undefined;
-    },
-    hasSlice: (name: string) => name === 'github-issues',
-    isSliceLoading: (name: string) => name === 'github-issues' && loading,
+    githubIssues: issuesSlice,
   });
 };
 

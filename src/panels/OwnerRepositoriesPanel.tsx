@@ -14,7 +14,6 @@ import {
 import type {
   GitHubRepository,
   RepositoryPreviewEventPayload,
-  OwnerRepositoriesSliceData,
   OwnerRepositoriesPanelPropsTyped,
 } from '../types/github';
 
@@ -66,10 +65,8 @@ const OwnerRepositoriesPanelContent: React.FC<OwnerRepositoriesPanelProps> = ({
   const { ownerRepositories: ownerSlice } = context;
   const isLoading = ownerSlice?.loading ?? false;
 
-  const ownerInfo = ownerSlice?.data?.owner ?? null;
   const repositories = ownerSlice?.data?.repositories ?? [];
   const error = ownerSlice?.data?.error ?? null;
-  const isAuthenticated = ownerSlice?.data?.isAuthenticated ?? false;
 
   // Request data refresh
   const handleRefresh = useCallback(() => {

@@ -449,19 +449,8 @@ const createMessagesContext = (
     },
   };
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('github-messages', messagesSlice as DataSlice);
-
   return createMockContext({
-    slices,
-    getSlice: <T,>(name: string) => {
-      if (name === 'github-messages') {
-        return messagesSlice as unknown as DataSlice<T>;
-      }
-      return undefined;
-    },
-    hasSlice: (name: string) => name === 'github-messages',
-    isSliceLoading: (name: string) => name === 'github-messages' && loading,
+    githubMessages: messagesSlice,
   });
 };
 

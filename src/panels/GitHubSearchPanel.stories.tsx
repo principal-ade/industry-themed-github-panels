@@ -27,6 +27,7 @@ const mockSearchResults: GitHubRepository[] = [
     default_branch: 'main',
     stargazers_count: 225000,
     forks_count: 46000,
+    updated_at: '2024-12-10T10:30:00Z',
   },
   {
     id: 2,
@@ -45,6 +46,7 @@ const mockSearchResults: GitHubRepository[] = [
     default_branch: 'main',
     stargazers_count: 207000,
     forks_count: 33500,
+    updated_at: '2024-12-09T08:15:00Z',
   },
   {
     id: 3,
@@ -63,6 +65,7 @@ const mockSearchResults: GitHubRepository[] = [
     default_branch: 'main',
     stargazers_count: 95000,
     forks_count: 25000,
+    updated_at: '2024-12-08T14:45:00Z',
   },
   {
     id: 4,
@@ -81,6 +84,7 @@ const mockSearchResults: GitHubRepository[] = [
     default_branch: 'main',
     stargazers_count: 78000,
     forks_count: 4100,
+    updated_at: '2024-12-07T16:20:00Z',
   },
   {
     id: 5,
@@ -99,6 +103,7 @@ const mockSearchResults: GitHubRepository[] = [
     default_branch: 'canary',
     stargazers_count: 124000,
     forks_count: 26500,
+    updated_at: '2024-12-11T09:00:00Z',
   },
 ];
 

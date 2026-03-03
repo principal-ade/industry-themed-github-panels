@@ -5,13 +5,14 @@ import { GitHubIssueDetailPanel, GitHubIssueDetailPanelMetadata } from './panels
 import { GitHubMessagesPanel, GitHubMessagesPanelMetadata } from './panels/GitHubMessagesPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
-import type { PanelDefinition, PanelContextValue, PanelTool } from './types';
-import { githubTools, githubToolsMetadata } from './tools';
+import type { PanelDefinition, PanelContextValue } from './types';
+import { githubTools } from './tools';
 
 /**
  * Export array of panel definitions.
  * This is the required export for panel extensions.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const panels: PanelDefinition<any, any>[] = [
   {
     metadata: {
@@ -20,15 +21,9 @@ export const panels: PanelDefinition<any, any>[] = [
     },
     component: GitHubProjectsPanel,
 
-    onMount: async (context: PanelContextValue) => {
+    onMount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('GitHub Projects Panel mounted');
-
-      // Refresh GitHub data if available
-      const slice = context.getSlice('githubRepositories');
-      if (slice && !slice.loading) {
-        await slice.refresh();
-      }
     },
 
     onUnmount: async (_context: PanelContextValue) => {
@@ -54,15 +49,9 @@ export const panels: PanelDefinition<any, any>[] = [
     metadata: GitHubIssuesPanelMetadata,
     component: GitHubIssuesPanel,
 
-    onMount: async (context: PanelContextValue) => {
+    onMount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('GitHub Issues Panel mounted');
-
-      // Refresh issues data if available
-      const slice = context.getSlice('githubIssues');
-      if (slice && !slice.loading) {
-        await slice.refresh();
-      }
     },
 
     onUnmount: async (_context: PanelContextValue) => {

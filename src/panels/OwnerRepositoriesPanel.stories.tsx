@@ -214,19 +214,8 @@ const createOwnerContext = (
     },
   };
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('owner-repositories', ownerSlice as DataSlice);
-
   return createMockContext({
-    slices,
-    getSlice: <T,>(name: string) => {
-      if (name === 'owner-repositories') {
-        return ownerSlice as unknown as DataSlice<T>;
-      }
-      return undefined;
-    },
-    hasSlice: (name: string) => name === 'owner-repositories',
-    isSliceLoading: (name: string) => name === 'owner-repositories' && loading,
+    ownerRepositories: ownerSlice,
   });
 };
 

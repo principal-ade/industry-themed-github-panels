@@ -24,7 +24,6 @@ import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { PanelEventEmitter } from '../types';
 import type {
-  GitHubMessagesSliceData,
   GitHubMessagesPanelProps,
   GitHubTimelineEvent,
   GitHubTimelineCommentEvent,
@@ -294,67 +293,6 @@ const ReactionBar: React.FC<ReactionBarProps> = ({ reactions, onToggleReaction, 
           )}
         </div>
       )}
-    </div>
-  );
-};
-
-/**
- * Reactions display component
- */
-const ReactionsDisplay: React.FC<{ reactions: GitHubReactions }> = ({ reactions }) => {
-  const { theme } = useTheme();
-
-  if (reactions.total_count === 0) return null;
-
-  const reactionEmojis: Record<string, string> = {
-    '+1': '\u{1F44D}',
-    '-1': '\u{1F44E}',
-    laugh: '\u{1F604}',
-    hooray: '\u{1F389}',
-    confused: '\u{1F615}',
-    heart: '\u{2764}\u{FE0F}',
-    rocket: '\u{1F680}',
-    eyes: '\u{1F440}',
-  };
-
-  const reactionCounts: Record<string, number> = {
-    '+1': reactions['+1'],
-    '-1': reactions['-1'],
-    laugh: reactions.laugh,
-    hooray: reactions.hooray,
-    confused: reactions.confused,
-    heart: reactions.heart,
-    rocket: reactions.rocket,
-    eyes: reactions.eyes,
-  };
-
-  const activeReactions = Object.entries(reactionEmojis)
-    .filter(([key]) => reactionCounts[key] > 0)
-    .map(([key, emoji]) => ({
-      emoji,
-      count: reactionCounts[key],
-    }));
-
-  return (
-    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-      {activeReactions.map(({ emoji, count }) => (
-        <span
-          key={emoji}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '2px 8px',
-            borderRadius: '12px',
-            backgroundColor: theme.colors.backgroundSecondary,
-            border: `1px solid ${theme.colors.border}`,
-            fontSize: theme.fontSizes[0],
-          }}
-        >
-          <span>{emoji}</span>
-          <span style={{ fontFamily: theme.fonts.body, color: theme.colors.textSecondary }}>{count}</span>
-        </span>
-      ))}
     </div>
   );
 };

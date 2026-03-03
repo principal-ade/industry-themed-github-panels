@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider, theme as defaultTheme } from '@principal-ade/industry-theme';
 import { ResponsiveConfigurablePanelLayout } from '@principal-ade/panel-layouts';
@@ -10,7 +10,7 @@ import {
   createMockActions,
   createMockEvents,
 } from '../mocks/panelContext';
-import type { DataSlice, PanelComponentProps } from '../types';
+import type { DataSlice, PanelContextValue } from '../types';
 import type {
   GitHubIssuesSliceData,
   GitHubIssue,
@@ -392,29 +392,9 @@ const IssueTaskLifecycleDemo: React.FC<{
       }
     : undefined;
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('github-issues', issuesSlice as DataSlice);
-  if (messagesSlice) {
-    slices.set('github-messages', messagesSlice as DataSlice);
-  }
-
   const context = createMockContext({
-    slices,
-    getSlice: <T,>(name: string) => {
-      if (name === 'github-issues') {
-        return issuesSlice as unknown as DataSlice<T>;
-      }
-      if (name === 'github-messages' && messagesSlice) {
-        return messagesSlice as unknown as DataSlice<T>;
-      }
-      return undefined;
-    },
-    hasSlice: (name: string) => {
-      if (name === 'github-issues') return true;
-      if (name === 'github-messages') return messagesSlice !== undefined;
-      return false;
-    },
-    isSliceLoading: () => false,
+    githubIssues: issuesSlice,
+    ...(messagesSlice ? { githubMessages: messagesSlice } : {}),
   });
 
   // Host orchestration: Listen for domain events and emit focus events
@@ -618,19 +598,22 @@ const IssueTaskLifecycleDemo: React.FC<{
     };
   }, [events, showMessages]);
 
-  const props: PanelComponentProps = { context, actions, events };
+  // Create props with typed context that includes all possible slice data
+  const issuesProps = { context: context as PanelContextValue & { githubIssues: DataSlice<GitHubIssuesSliceData> }, actions, events };
+  const messagesProps = { context: context as PanelContextValue & { githubMessages: DataSlice<GitHubMessagesSliceData> }, actions, events };
+  const detailProps = { context, actions, events };
 
   // Define panels array
   const panels = [
     {
       id: 'github-issues',
       label: 'GitHub Issues',
-      content: <GitHubIssuesPanel {...props} />,
+      content: <GitHubIssuesPanel {...issuesProps} />,
     },
     {
       id: 'github-issue-detail',
       label: 'Issue Detail',
-      content: <GitHubIssueDetailPanel {...props} />,
+      content: <GitHubIssueDetailPanel {...detailProps} />,
     },
   ];
 
@@ -638,7 +621,7 @@ const IssueTaskLifecycleDemo: React.FC<{
     panels.push({
       id: 'github-messages',
       label: 'Messages',
-      content: <GitHubMessagesPanel {...props} />,
+      content: <GitHubMessagesPanel {...messagesProps} />,
     });
   }
 

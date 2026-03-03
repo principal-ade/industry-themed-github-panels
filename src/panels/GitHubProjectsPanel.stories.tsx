@@ -70,19 +70,8 @@ const createGitHubContext = (sliceData: GitHubRepositoriesSliceData, loading = f
     },
   };
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('github-repositories', githubSlice as DataSlice);
-
   return createMockContext({
-    slices,
-    getSlice: <T,>(name: string) => {
-      if (name === 'github-repositories') {
-        return githubSlice as unknown as DataSlice<T>;
-      }
-      return undefined;
-    },
-    hasSlice: (name: string) => name === 'github-repositories',
-    isSliceLoading: (name: string) => name === 'github-repositories' && loading,
+    githubRepositories: githubSlice,
   });
 };
 
@@ -191,10 +180,7 @@ export const ManyRepositories: Story = {
 export const NoDataSlice: Story = {
   args: {
     context: createMockContext({
-      slices: new Map(),
-      hasSlice: () => false,
-      getSlice: () => undefined,
-      isSliceLoading: () => false,
+      githubRepositories: undefined as unknown as DataSlice<GitHubRepositoriesSliceData>,
     }),
     actions: createMockActions(),
     events: createMockEvents(),

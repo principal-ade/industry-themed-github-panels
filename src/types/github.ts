@@ -966,6 +966,7 @@ export type GitHubIssueDetailPanelActions = PanelActions;
  * Context for GitHubIssueDetailPanel
  * This panel is event-driven and doesn't use context slices
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type GitHubIssueDetailPanelContext = {};
 
 /**
@@ -986,6 +987,7 @@ export type RecentRepositoriesPanelActions = PanelActions;
  * Context for RecentRepositoriesPanel
  * This panel uses localStorage and doesn't require context slices
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type RecentRepositoriesPanelContext = {};
 
 /**

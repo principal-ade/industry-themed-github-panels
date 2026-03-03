@@ -5,8 +5,6 @@ import { Search, Github, X, AlertCircle } from 'lucide-react';
 import type {
   GitHubRepository,
   RepositoryPreviewEventPayload,
-  WorkspaceCollectionSlice,
-  WorkspaceRepositoriesSlice,
   GitHubSearchPanelActions,
   GitHubSearchPanelProps,
 } from '../types/github';
