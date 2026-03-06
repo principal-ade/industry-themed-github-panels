@@ -997,3 +997,20 @@ export type RecentRepositoriesPanelProps = PanelComponentProps<
   RecentRepositoriesPanelActions,
   RecentRepositoriesPanelContext
 >;
+
+// ============================================================================
+// OrgProfilePanel Types
+// ============================================================================
+
+// Re-export types from OrgProfilePanel for convenience
+export type {
+  GitHubOrgProfile,
+  OrgProfileSlice,
+  OrgProfilePanelActions,
+  OrgProfilePanelContext,
+  OrgProfilePanelPropsTyped,
+  OrgProfileView,
+  CollectionSelectedPayload,
+  RepositoryCloneRequestedPayload,
+  OrgProfilePanelEventPayloads,
+} from '../panels/OrgProfilePanel/types';

@@ -5,8 +5,10 @@ import { GitHubIssueDetailPanel, GitHubIssueDetailPanelMetadata } from './panels
 import { GitHubMessagesPanel, GitHubMessagesPanelMetadata } from './panels/GitHubMessagesPanel';
 import { OwnerRepositoriesPanel, OwnerRepositoriesPanelMetadata } from './panels/OwnerRepositoriesPanel';
 import { RecentRepositoriesPanel, RecentRepositoriesPanelMetadata } from './panels/RecentRepositoriesPanel';
+import { OrgProfilePanel, OrgProfilePanelMetadata } from './panels/OrgProfilePanel';
 import type { PanelDefinition, PanelContextValue } from './types';
 import { githubTools } from './tools';
+import { orgProfileTools } from './panels/OrgProfilePanel/tools';
 
 /**
  * Export array of panel definitions.
@@ -115,6 +117,23 @@ export const panels: PanelDefinition<any, any>[] = [
       console.log('GitHub Messages Panel unmounting');
     },
   },
+  {
+    metadata: {
+      ...OrgProfilePanelMetadata,
+      tools: orgProfileTools,
+    },
+    component: OrgProfilePanel,
+
+    onMount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Org Profile Panel mounted');
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Org Profile Panel unmounting');
+    },
+  },
 ];
 
 /**
@@ -145,6 +164,7 @@ export { GitHubMessagesPanel } from './panels/GitHubMessagesPanel';
 export { OwnerRepositoriesPanel, type OwnerRepositoriesPanelProps } from './panels/OwnerRepositoriesPanel';
 export { RecentRepositoriesPanel, addRecentRepository, addRecentOwner } from './panels/RecentRepositoriesPanel';
 export type { OwnerInfo } from './panels/RecentRepositoriesPanel';
+export { OrgProfilePanel, OrgProfilePanelMetadata, OrgProfilePanelPreview } from './panels/OrgProfilePanel';
 
 // Export types
 export type {
@@ -195,6 +215,13 @@ export type {
   OwnerRepositoriesSliceData,
   WorkspaceRepositoriesSlice,
   GitHubWorkspaceRepositoriesSlice,
+  // Org Profile types
+  GitHubOrgProfile,
+  OrgProfileSlice,
+  OrgProfilePanelActions,
+  OrgProfilePanelContext,
+  OrgProfilePanelPropsTyped,
+  OrgProfileView,
 } from './types/github';
 
 // Export helper functions
@@ -221,3 +248,14 @@ export {
   viewPullRequestMessagesTool,
   refreshMessagesTool,
 } from './tools';
+
+// Export OrgProfilePanel tools
+export {
+  orgProfileTools,
+  orgProfileToolsMetadata,
+  setOrgViewTool,
+  selectOrgCollectionTool,
+  selectOrgRepositoryTool,
+  cloneOrgRepositoryTool,
+  filterOrgRepositoriesTool,
+} from './panels/OrgProfilePanel/tools';
