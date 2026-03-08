@@ -51,6 +51,8 @@ export interface OrgProfileSlice {
   repositories: GitHubRepository[];
   /** Currently selected collection ID (for highlighting) */
   selectedCollectionId?: string | null;
+  /** Currently selected repository ID (for highlighting) */
+  selectedRepositoryId?: number | null;
   /** Currently active view tab */
   currentView?: OrgProfileView;
   /** Whether data is loading */

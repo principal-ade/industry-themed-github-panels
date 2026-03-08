@@ -143,6 +143,7 @@ const OrgProfilePanelContent: React.FC<OrgProfilePanelPropsTyped> = ({
     [profileSlice?.data?.repositories]
   );
   const selectedCollectionId = profileSlice?.data?.selectedCollectionId;
+  const selectedRepositoryId = profileSlice?.data?.selectedRepositoryId;
   const loading = profileSlice?.loading ?? false;
 
   // Filter repositories by search
@@ -174,6 +175,17 @@ const OrgProfilePanelContent: React.FC<OrgProfilePanelPropsTyped> = ({
   // Handle repository selection
   const handleRepositorySelect = useCallback(
     (repository: GitHubRepository) => {
+      // Emit standard repository:preview event for cross-panel communication
+      events.emit({
+        type: 'repository:preview',
+        source: PANEL_ID,
+        timestamp: Date.now(),
+        payload: {
+          repository,
+          source: 'click',
+        },
+      });
+      // Emit panel-specific event for detailed tracking
       events.emit(
         createPanelEvent(`${PANEL_ID}:repository:selected`, {
           owner: repository.owner.login,
@@ -706,6 +718,7 @@ const OrgProfilePanelContent: React.FC<OrgProfilePanelPropsTyped> = ({
                   <GitHubRepositoryCard
                     key={repo.id}
                     repository={repo}
+                    isSelected={repo.id === selectedRepositoryId}
                     onSelect={handleRepositorySelect}
                     onClone={
                       panelActions.cloneRepository
