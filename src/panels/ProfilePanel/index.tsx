@@ -66,8 +66,8 @@ const CollectionCard: React.FC<{
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '12px',
-        borderRadius: '8px',
+        padding: '16px',
+        borderRadius: 0,
         backgroundColor: isSelected
           ? `${theme.colors.primary}15`
           : isHovered
@@ -582,7 +582,7 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
             <strong style={{ color: theme.colors.text }}>
               {profile.public_repos}
             </strong>{' '}
-            <span style={{ color: theme.colors.textSecondary }}>repos</span>
+            <span style={{ color: theme.colors.textSecondary }}>projects</span>
           </span>
         </div>
       </div>
@@ -657,7 +657,7 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
           }}
         >
           <FolderGit2 size={16} />
-          {profileType === 'user' ? 'Projects' : 'Repositories'} (
+          Projects (
           {repositories.length})
         </button>
         {profileType === 'user' && (
@@ -696,11 +696,11 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
         )}
       </div>
 
-      {/* Search box for repositories/starred view */}
-      {(activeView === 'repositories' || activeView === 'starred') && (
+      {/* Search box for repositories/starred view - only show if 5+ items */}
+      {(activeView === 'repositories' || activeView === 'starred') &&
+        (activeView === 'starred' ? starredRepositories : repositories).length >= 5 && (
         <div
           style={{
-            padding: '12px 16px',
             borderBottom: `1px solid ${theme.colors.border}`,
             backgroundColor: theme.colors.background,
           }}
@@ -712,7 +712,7 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '8px 12px',
+                padding: '12px 16px',
                 borderRadius: '6px',
                 border: `1px solid ${theme.colors.border}`,
                 backgroundColor: theme.colors.backgroundSecondary,
@@ -761,10 +761,8 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
         }}
       >
         {activeView === 'collections' && (
@@ -772,9 +770,16 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
             {collections.length === 0 ? (
               <div
                 style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   padding: '32px',
-                  textAlign: 'center',
                   color: theme.colors.textSecondary,
+                  fontSize: `${theme.fontSizes[1]}px`,
+                  fontFamily: theme.fonts.body,
+                  backgroundColor: theme.colors.background,
                 }}
               >
                 <FolderOpen
@@ -801,9 +806,16 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
             {filteredRepositories.length === 0 ? (
               <div
                 style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   padding: '32px',
-                  textAlign: 'center',
                   color: theme.colors.textSecondary,
+                  fontSize: `${theme.fontSizes[1]}px`,
+                  fontFamily: theme.fonts.body,
+                  backgroundColor: theme.colors.background,
                 }}
               >
                 {activeView === 'starred' ? (
@@ -816,10 +828,10 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
                 )}
                 <p style={{ margin: 0 }}>
                   {searchQuery
-                    ? `No repositories matching "${searchQuery}"`
+                    ? `No projects matching "${searchQuery}"`
                     : activeView === 'starred'
-                      ? 'No starred repositories'
-                      : 'No repositories'}
+                      ? 'No starred projects'
+                      : 'No projects'}
                 </p>
               </div>
             ) : (
@@ -913,7 +925,7 @@ export const ProfilePanelPreview: React.FC<{ profileType?: ProfileType }> = ({
           marginTop: '4px',
         }}
       >
-        View {label.toLowerCase()} collections and repos
+        View {label.toLowerCase()} collections and projects
       </div>
     </div>
   );
