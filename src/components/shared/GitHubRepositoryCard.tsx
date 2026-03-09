@@ -184,10 +184,10 @@ export const GitHubRepositoryCard: React.FC<GitHubRepositoryCardProps> = ({
         transition: 'background-color 0.15s, border-color 0.15s, opacity 0.15s',
       }}
     >
-      {/* Avatar */}
+      {/* Avatar - use parent owner for forks */}
       <RepositoryAvatar
-        owner={repository.owner.login}
-        customAvatarUrl={repository.owner.avatar_url}
+        owner={repository.fork && repository.parent?.owner?.login ? repository.parent.owner.login : repository.owner.login}
+        customAvatarUrl={repository.fork && repository.parent?.owner?.avatar_url ? repository.parent.owner.avatar_url : repository.owner.avatar_url}
         size={40}
       />
 
@@ -236,7 +236,7 @@ export const GitHubRepositoryCard: React.FC<GitHubRepositoryCardProps> = ({
           )}
         </div>
 
-        {/* Owner */}
+        {/* Owner - show parent owner for forks */}
         <div
           style={{
             fontSize: `${theme.fontSizes[0]}px`,
@@ -245,7 +245,9 @@ export const GitHubRepositoryCard: React.FC<GitHubRepositoryCardProps> = ({
             marginBottom: '4px',
           }}
         >
-          {repository.owner.login}
+          {repository.fork && repository.parent?.owner?.login
+            ? repository.parent.owner.login
+            : repository.owner.login}
         </div>
 
         {/* Description */}
