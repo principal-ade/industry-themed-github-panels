@@ -999,18 +999,26 @@ export type RecentRepositoriesPanelProps = PanelComponentProps<
 >;
 
 // ============================================================================
-// OrgProfilePanel Types
+// ProfilePanel Types
 // ============================================================================
 
-// Re-export types from OrgProfilePanel for convenience
+// Re-export types from ProfilePanel for convenience
 export type {
+  GitHubUserProfile,
   GitHubOrgProfile,
-  OrgProfileSlice,
-  OrgProfilePanelActions,
-  OrgProfilePanelContext,
-  OrgProfilePanelPropsTyped,
-  OrgProfileView,
+  GitHubProfile,
+  ProfileSlice,
+  ProfilePanelActions,
+  ProfilePanelContext,
+  ProfilePanelExtensions,
+  ProfilePanelBaseProps,
+  ProfilePanelPropsTyped,
+  ProfileView,
+  ProfileType,
   CollectionSelectedPayload,
+  RepositorySelectedPayload,
   RepositoryCloneRequestedPayload,
-  OrgProfilePanelEventPayloads,
-} from '../panels/OrgProfilePanel/types';
+  ProfilePanelEventPayloads,
+} from '../panels/ProfilePanel/types';
+
+export { isOrgProfile, isUserProfile, getProfileDescription } from '../panels/ProfilePanel/types';
