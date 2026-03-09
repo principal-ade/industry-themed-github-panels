@@ -166,7 +166,7 @@ export const GitHubRepositoryCard: React.FC<GitHubRepositoryCardProps> = ({
         alignItems: 'flex-start',
         gap: '12px',
         padding: '12px',
-        borderRadius: '8px',
+        borderRadius: 0,
         backgroundColor: isSelected
           ? `${theme.colors.primary}15`
           : isHovered

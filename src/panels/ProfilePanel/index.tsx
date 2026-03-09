@@ -713,7 +713,7 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
                 alignItems: 'center',
                 gap: '8px',
                 padding: '12px 16px',
-                borderRadius: '6px',
+                borderRadius: 0,
                 border: `1px solid ${theme.colors.border}`,
                 backgroundColor: theme.colors.backgroundSecondary,
               }}
