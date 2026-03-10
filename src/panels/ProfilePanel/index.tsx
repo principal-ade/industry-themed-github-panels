@@ -142,7 +142,9 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
     return ['collections', 'repositories'];
   }, [profileType]);
 
-  const [activeView, setActiveView] = useState<ProfileView>('repositories');
+  const [activeView, setActiveView] = useState<ProfileView>(
+    context.profile?.data?.currentView ?? 'repositories'
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   // Get profile data from typed context slice
