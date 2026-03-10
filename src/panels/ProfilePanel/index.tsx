@@ -765,6 +765,7 @@ const ProfilePanelContent: React.FC<ProfilePanelPropsTyped> = ({
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          backgroundColor: theme.colors.background,
         }}
       >
         {activeView === 'collections' && (
